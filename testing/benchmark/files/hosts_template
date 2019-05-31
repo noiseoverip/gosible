@@ -1,0 +1,14 @@
+node-0 ansible_host={{ .targetHost }} ansible_user=ubuntu ansible_python=/usr/bin/python3
+node-1 ansible_host={{ .targetHost }} ansible_user=ubuntu
+node-2 ansible_host={{ .targetHost }} ansible_user=ubuntu
+node-3 ansible_host={{ .targetHost }} ansible_user=ubuntu
+node-4 ansible_host={{ .targetHost }} ansible_user=ubuntu
+node-5 ansible_host={{ .targetHost }} ansible_user=ubuntu
+node-6 ansible_host={{ .targetHost }} ansible_user=ubuntu
+node-7 ansible_host={{ .targetHost }} ansible_user=ubuntu
+node-8 ansible_host={{ .targetHost }} ansible_user=ubuntu
+node-9 ansible_host={{ .targetHost }} ansible_user=ubuntu
+node-10 ansible_host={{ .targetHost }} ansible_user=ubuntu
+
+[special]
+node-0

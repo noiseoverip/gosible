@@ -1,0 +1,1 @@
+Benchmark tests are built to be executed from directory testing/benchmark

@@ -1,0 +1,59 @@
+---
+##
+## This playbook tests all available modules and verifies that they produce desired results
+##
+- hosts: all
+  gather_facts: false
+  tasks:
+    - name: Echo var from group all 1
+      command: "echo {{ from_group_all }}"
+
+    - name: Echo var from group all 2
+      command: "echo {{ from_group_all_second }}"
+
+    - name: Echo var from group special 1
+      command: "echo {{ from_group_special }}"
+
+    - name: Echo var from group special 2
+      command: "echo {{ from_group_special_second }}"
+
+    - name: Should be skipped
+      command: "Not supposed to be executed"
+      when: False
+
+    - name: Template test
+      template:
+        src: template_example.j2
+        dest: /tmp/ansiblego_test_template
+      register: temp_result
+
+    - name: Debug
+      debug:
+        var: temp_result
+
+    - name: Print written template from remote
+      command: "cat /tmp/ansiblego_test_template"
+
+    - name: Copy test
+      copy:
+        src: template_example.j2
+        dest: /tmp/ansiblego_test_copy
+      register: copy_result
+
+    - name: Debug
+      debug:
+        var: copy_result
+
+    - name: Test Assert
+      assert:
+        that: "1 == 1"
+        success_msg: "Yes it is success"
+
+    - name: Set fact myFact=YEEPEE
+      set_fact:
+        myFact: YEEPEE
+
+    - name: Assert fact
+      assert:
+        that: "myFact == 'YEEPEE'"
+

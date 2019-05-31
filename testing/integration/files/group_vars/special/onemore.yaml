@@ -1,0 +1,2 @@
+---
+from_group_special_second: "{{ from_group_special }}"

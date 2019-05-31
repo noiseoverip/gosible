@@ -1,0 +1,14 @@
+- gather_facts: false
+  hosts: all
+  tasks:
+    - &id001 {command: echo labas}
+    - *id001
+    - *id001
+    - *id001
+    - *id001
+    - *id001
+    - *id001
+    - *id001
+    - *id001
+    - *id001
+
