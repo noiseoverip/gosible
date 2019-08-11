@@ -10,7 +10,10 @@ type Host struct {
 	IpAddr string
 	Login string
 	Transport transport.Transport
-	Params map[string]string
+	Params map[string]string	// These are host params set in inventory as part of host declaration
+	Groups []string
+	// These are variables set through group_vars, set_facts, cli...
+	Vars HostVariables
 }
 
 // 	UnmarshalHost parses inventory line representing host and sets appropriate host fields
@@ -40,6 +43,7 @@ func UnmarshalHost(input string, h *Host) error {
 			h.Login = keyVal[1]
 		}
 	}
+	h.Vars = make(map[string]interface{})
 	return nil
 }
 

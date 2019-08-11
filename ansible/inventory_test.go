@@ -35,7 +35,7 @@ func TestReadInventory(t *testing.T) {
 	assert.NotNil(t, inv)
 	assert.NotEmpty(t, inv)
 
-	allGroup, ok := inv.Group("all")
+	allGroup, ok := inv.groupByName("all")
 	assert.True(t, ok)
 	assert.Exactly(t, 2, len(allGroup.Hosts))
 

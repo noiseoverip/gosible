@@ -1,0 +1,8 @@
+---
+- hosts: all
+  gather_facts: false
+  tasks:
+    - name: Say HELLO1
+      command: "echo {{ from_group_all }}"
+    - name: Say HELLO2
+      command: "echo {{ from_group_special }}"

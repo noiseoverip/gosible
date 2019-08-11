@@ -40,7 +40,7 @@ func TestLoadPlaybook(t *testing.T) {
 	}
 
 	for _, play := range playbook.Plays {
-		assert.NotNil(t, play.Hosts)
+		assert.NotNil(t, play.HostSelector)
 	}
 
 	// Make sure play index 0 has tasks

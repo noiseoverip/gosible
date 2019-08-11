@@ -1,40 +1,42 @@
 package main
 
 import (
-	"ansiblego/ansible"
+	"ansiblego/runner"
 	"flag"
 	"fmt"
 	"os"
+	"path"
 )
 
 var inventoryPath = flag.String("i", "", "Path to inventory")
-// Playbook path is defined as cli argument
 
-func main() {
+
+func run() error {
 	flag.Parse()
-	inventoryFile, err := os.Open(*inventoryPath)
-	if err != nil {
-		fmt.Printf("Failed to open file %v", err)
-		os.Exit(1)
-	}
-	inventory := new(ansible.Inventory)
-	err = ansible.ReadInventory(inventoryFile, inventory)
-	if err != nil {
-		fmt.Printf("Failed to load inventory from path %s: %v", inventoryPath, err)
-		os.Exit(1)
-	}
 	if len(flag.Args()) < 1 {
-		fmt.Printf("Too few arguments provided, please provide path to playbook")
-		os.Exit(1)
+		return fmt.Errorf("too few arguments provided, please provide path to playbook") //TODO: show to print to stderr
 	}
 	playbookPath := flag.Arg(0)
-	playbookFile, err := os.Open(playbookPath)
-	playbook := new(ansible.Playbook)
-	err = ansible.ReadPlaybook(playbookFile, playbook)
+	cwd, err := os.Getwd()
 	if err != nil {
-		fmt.Printf("Failed to load playbook from path %s: %v", playbookPath, err)
-		os.Exit(1)
+		return err
 	}
 
-	playbook.Run(inventory)
+	r := &runner.Runner{PlaybookFilePath: path.Join(cwd, playbookPath), InventoryFilePath: path.Join(cwd, *inventoryPath) }
+	err = r.Run()
+	if err != nil {
+		return fmt.Errorf("runner error: %v", err)
+	}
+	return nil
+}
+
+//
+// Usage: ansiblego -i inventory site.yml
+//
+func main() {
+	err := run()
+	if err != nil {
+		fmt.Printf(err.Error())
+		os.Exit(1)
+	}
 }
