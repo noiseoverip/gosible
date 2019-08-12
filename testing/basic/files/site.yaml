@@ -2,7 +2,19 @@
 - hosts: all
   gather_facts: false
   tasks:
-    - name: Say HELLO1
+    - name: Echo var from group all 1
       command: "echo {{ from_group_all }}"
-    - name: Say HELLO2
+
+    - name: Echo var from group all 2
+      command: "echo {{ from_group_all_second }}"
+
+    - name: Echo var from group special 1
       command: "echo {{ from_group_special }}"
+
+    - name: Echo var from gorup special 2
+      command: "echo {{ from_group_special_second }}"
+      when: False
+
+    - name: Should be skipped
+      command: "Not supposed to be executed"
+      when: False

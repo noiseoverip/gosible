@@ -2,11 +2,13 @@ package ansible
 
 import (
 	"ansiblego/modules"
+	"fmt"
 )
 
 type Task struct {
 	Name string `yaml:"name"`
 	Module modules.Module
+	When string		// unr-rendered 'when' attribute which controls if task will be executed or not
 }
 
 func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -16,13 +18,15 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return err
 	}
 	for key, value := range all {
-		// TODO: key should be either top level attribute like "name", "with_items" or module name
-		if key == "command" {
+		switch key {
+		case "when":
+			t.When = fmt.Sprintf("%v", value) // This will make sure it is a string
+		case "command":
 			t.Module = modules.LoadCommand(map[string]string{ "stdin": value.(string) })
-		}
-		if key == "name" {
+		case "name":
 			t.Name = value.(string)
 		}
+		// TODO: default should probably module lookup form supported modules...
 	}
 	return nil
 }

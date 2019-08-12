@@ -1,11 +1,13 @@
 package ansible
 
 import (
+	"ansiblego/templating"
 	"ansiblego/transport"
 	"bytes"
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io"
+	"strings"
 )
 
 type Playbook struct {
@@ -43,6 +45,7 @@ func (playbook *Playbook) Run(inventory *Inventory, groupVars GroupVariables) er
 			return err
 		}
 
+		// TODO: the way it is done now, host variable will not persist across plays
 		// Build initial host variables by looping though groups it belongs to add variables of that group
 		// Precedence:
 		// -- group vars (ordered alphabetically )
@@ -65,6 +68,20 @@ func (playbook *Playbook) Run(inventory *Inventory, groupVars GroupVariables) er
 			// Since role is just a list of tasks, we could simply expand it to tasks and attach role information to
 			// task (for tracking and logging mostly). Then task execution would not change.
 			for _, task := range play.Tasks {
+				// Handle conditional task execution 'when'
+				if task.When != "" {
+					conditional := fmt.Sprintf("{%% if %s %%} True {%% else %%} False {%% endif %%}", task.When)
+					if outRaw, err := templating.TemplateExec(conditional, host.Vars); err == nil {
+						out := strings.TrimSpace(outRaw)
+						if out == "False" {
+							log("Skipping task [%s] on host %s\n", task.Name, host)
+							continue
+						}
+					} else {
+						return fmt.Errorf("%v", err)
+					}
+				}
+
 				log("Running task [%s] on host %s\n", task.Name, host)
 				if host.Transport == nil {
 					host.Transport = transport.CreateSSHTransport(host.Params)

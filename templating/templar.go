@@ -20,5 +20,5 @@ func TemplateExec(input string, vars map[string]interface{}) (output string,  er
 	}
 
 	fmt.Printf("templar output: %s\n", output)
-	return
+	return output, nil
 }
