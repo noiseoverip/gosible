@@ -3,6 +3,7 @@ package ansible
 import (
 	"ansiblego/modules"
 	"fmt"
+	"github.com/mitchellh/mapstructure"
 )
 
 type Task struct {
@@ -23,6 +24,13 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			t.When = fmt.Sprintf("%v", value) // This will make sure it is a string
 		case "command":
 			t.Module = modules.LoadCommand(map[string]string{ "stdin": value.(string) })
+		case "template":
+			params := map[string]string{}
+			err := mapstructure.Decode(value, &params)	// TODO: this might be slow, need to investigate
+			if err != nil {
+				return err
+			}
+			t.Module = modules.LoadTemplate(params)
 		case "name":
 			t.Name = value.(string)
 		}

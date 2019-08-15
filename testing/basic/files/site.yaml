@@ -13,8 +13,12 @@
 
     - name: Echo var from gorup special 2
       command: "echo {{ from_group_special_second }}"
-      when: False
 
     - name: Should be skipped
       command: "Not supposed to be executed"
       when: False
+
+    - name: Template test
+      template:
+        src: template_example.j2
+        dest: remote/path

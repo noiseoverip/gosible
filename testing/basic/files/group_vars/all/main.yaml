@@ -1,2 +1,3 @@
 ---
 from_group_all: "hello_from_group_all"
+template_var: "hello from template"

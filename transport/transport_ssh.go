@@ -26,7 +26,7 @@ func (t *SSHTransport) Exec(command string, args... string) (resultCode int, std
 	fmt.Printf(">>> host:%s [%s %s]\n", t.HostAddress, command, strings.Join(args, " "))
 	// TODO: add ability to define key at the host level or use default one
 	session, err := t.openSession(t.Login, t.HostAddress, "/Users/salisauskas/.ssh/id_rsa")
-	defer session.Close()
+	defer session.Close() // TODO: reuse session
 	if err != nil {
 		return -1, "", fmt.Sprintf("Failed to create ssh session: %v", err)
 	}
@@ -36,6 +36,7 @@ func (t *SSHTransport) Exec(command string, args... string) (resultCode int, std
 	var bout bytes.Buffer
 	session.Stdout = &bout
 	cmd := fmt.Sprintf("/bin/sh -c \"%s %s\"", command, strings.Join(args, " "))
+
 	err = session.Run(cmd)
 	if err != nil {
 		return -1, string(bout.Bytes()), string(berr.Bytes())
