@@ -3,6 +3,7 @@ package templating
 import (
 	"fmt"
 	"github.com/flosch/pongo2"
+	"strings"
 )
 
 // Optimization: we could tag args which do not contain variables during initialization and then skip
@@ -21,4 +22,14 @@ func TemplateExec(input string, vars map[string]interface{}) (output string,  er
 
 	fmt.Printf("templar output: %s\n", output)
 	return output, nil
+}
+
+func Assert(condition string, vars map[string]interface{}) (bool, error) {
+	conditional := fmt.Sprintf("{%% if %s %%} True {%% else %%} False {%% endif %%}", condition)
+	if outRaw, err := TemplateExec(conditional, vars); err == nil {
+		out := strings.TrimSpace(outRaw)
+		return out == "True", nil
+	} else {
+		return false, fmt.Errorf("failed to evaluate condition: %v", err)
+	}
 }

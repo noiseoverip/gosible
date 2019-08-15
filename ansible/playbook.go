@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io"
-	"strings"
 )
 
 type Playbook struct {
@@ -70,19 +69,17 @@ func (playbook *Playbook) Run(inventory *Inventory, groupVars GroupVariables) er
 			for _, task := range play.Tasks {
 				// Handle conditional task execution 'when'
 				if task.When != "" {
-					conditional := fmt.Sprintf("{%% if %s %%} True {%% else %%} False {%% endif %%}", task.When)
-					if outRaw, err := templating.TemplateExec(conditional, host.Vars); err == nil {
-						out := strings.TrimSpace(outRaw)
-						if out == "False" {
-							log("Skipping task [%s] on host %s\n", task.Name, host)
-							continue
-						}
-					} else {
-						return fmt.Errorf("%v", err)
+					result, err  := templating.Assert(task.When, host.Vars)
+					if err != nil {
+						return err
+					}
+					if !result {
+						log("Skipping task [%s] on host %s\n", task.Name, host)
+						continue
 					}
 				}
 
-				log("Running task [%s] on host %s\n", task.Name, host)
+				log("\n### Running task [%s] on host %s\n", task.Name, host)
 				if host.Transport == nil {
 					host.Transport = transport.CreateSSHTransport(host.Params)
 				}

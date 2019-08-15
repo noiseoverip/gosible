@@ -9,7 +9,7 @@ import (
 type Task struct {
 	Name string `yaml:"name"`
 	Module modules.Module
-	When string		// unr-rendered 'when' attribute which controls if task will be executed or not
+	When string		// raw 'when' attribute which controls if task will be executed or not
 }
 
 func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -31,6 +31,13 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 				return err
 			}
 			t.Module = modules.LoadTemplate(params)
+		case "assert":
+			params := map[string]string{}
+			err := mapstructure.Decode(value, &params)
+			if err != nil {
+				return err
+			}
+			t.Module = modules.LoadAssert(params)
 		case "name":
 			t.Name = value.(string)
 		}

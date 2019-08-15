@@ -10,5 +10,5 @@ type ModuleExecResult struct {
 }
 
 func(r *ModuleExecResult) String() string {
-	return fmt.Sprintf("Result:%v\nStdout:\n%sStdErr:\n%s", r.Result, r.StdOut, r.StdErr)
+	return fmt.Sprintf("Result:%v\nStdout:\n%s\nStdErr:\n%s\n", r.Result, r.StdOut, r.StdErr)
 }

@@ -3,26 +3,35 @@ package modules
 import (
 	"ansiblego/templating"
 	"ansiblego/transport"
-	"strings"
 )
 
 // Command implements module interface and executes CLI commands on transport layer
 // Pipes are not supported at this point
-type Command struct {
-	Input string
+type Assert struct {
+	That       string // that
+	FailMsg    string // fail_msg
+	SuccessMsg string // success_msg
 }
 
-func LoadCommand(args map[string]string) Module {
-	return &Command{Input: args["stdin"]}
+func LoadAssert(args map[string]string) Module {
+	return &Assert{That: args["that"], FailMsg: args["success_msg"], SuccessMsg: args["success_msg"]}
 }
 
-func(c *Command) Run(transport transport.Transport, vars map[string]interface{}) *ModuleExecResult {
+func(self *Assert) Run(transport transport.Transport, vars map[string]interface{}) *ModuleExecResult {
 	// Since variable change during runtime, we have to render args at the point of execution
-	renderedArgs, err := templating.TemplateExec(c.Input, vars)
+	renderedCondition, err := templating.Assert(self.That, vars)
 	if err != nil {
 		return &ModuleExecResult{ Result: false, StdOut: "", StdErr: err.Error()}
 	}
-	cmd := strings.Split(renderedArgs, " ")
-	resultCode, stdout, stdr := transport.Exec(cmd[0], cmd[1:]...)
-	return &ModuleExecResult{ Result: resultCode == 0, StdOut: stdout, StdErr: stdr}
+	message := "Assertion failed"
+	if self.FailMsg != "" {
+		message = self.FailMsg
+	}
+	if renderedCondition {
+		message = "Assertion passed"
+		if self.SuccessMsg != "" {
+			message = self.SuccessMsg
+		}
+	}
+	return &ModuleExecResult{ Result: renderedCondition, StdOut: message, StdErr: ""}
 }
