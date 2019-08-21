@@ -27,3 +27,14 @@
       assert:
         that: "1 == 1"
         success_msg: "Yes it is success"
+
+    - name: Set fact
+      set_fact:
+        name: myFact
+        value: YEEPEE
+
+    - name: Assert fact
+      assert:
+        that: "myFact == 'YEEPEE'"
+
+

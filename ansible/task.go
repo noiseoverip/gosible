@@ -20,6 +20,8 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	for key, value := range all {
 		switch key {
+		case "name":
+			t.Name = value.(string)
 		case "when":
 			t.When = fmt.Sprintf("%v", value) // This will make sure it is a string
 		case "command":
@@ -38,8 +40,14 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 				return err
 			}
 			t.Module = modules.LoadAssert(params)
-		case "name":
-			t.Name = value.(string)
+		case "set_fact":
+			params := map[string]interface{}{}
+			err := mapstructure.Decode(value, &params)	// TODO: this might be slow, need to investigate
+			if err != nil {
+				return err
+			}
+			t.Module = modules.LoadSetHostFact(params)
+
 		}
 		// TODO: default should probably module lookup form supported modules...
 	}

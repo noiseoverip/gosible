@@ -85,6 +85,9 @@ func (playbook *Playbook) Run(inventory *Inventory, groupVars GroupVariables) er
 				}
 				r := task.Module.Run(host.Transport, host.Vars)
 				log("Module exec: %s", r)
+				if !r.Result {
+					return fmt.Errorf("module execution failed")
+				}
 			}
 		}
 
