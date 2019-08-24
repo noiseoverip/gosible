@@ -21,20 +21,23 @@
     - name: Template test
       template:
         src: template_example.j2
-        dest: remote/path
+        dest: /tmp/ansiblegofile
+      register: temp_result
+
+    - name: Debug
+      debug:
+        var: temp_result
 
     - name: Test Assert
       assert:
         that: "1 == 1"
         success_msg: "Yes it is success"
 
-    - name: Set fact
+    - name: Set fact myFact=YEEPEE
       set_fact:
-        name: myFact
-        value: YEEPEE
+        myFact: YEEPEE
 
     - name: Assert fact
       assert:
         that: "myFact == 'YEEPEE'"
-
 

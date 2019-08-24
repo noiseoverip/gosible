@@ -4,9 +4,12 @@ import (
 	"bbgithub.dev.bloomberg.com/babka/cli/pkg/util"
 	"bytes"
 	"fmt"
+	"github.com/bramvdbogaerde/go-scp"
+	"github.com/bramvdbogaerde/go-scp/auth"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"net"
+	"os"
 	"strings"
 	"time"
 )
@@ -15,6 +18,8 @@ import (
 type SSHTransport struct {
 	HostAddress string
 	Login string
+	SSHSession *ssh.Session
+	SCPSession *scp.Client
 }
 
 func CreateSSHTransport(params map[string]string) Transport {
@@ -22,27 +27,58 @@ func CreateSSHTransport(params map[string]string) Transport {
 }
 
 // Exec executes command
-func (t *SSHTransport) Exec(command string, args... string) (resultCode int, stdout string, stderr string) {
+func (t *SSHTransport) Exec(command string, args... string) (resultCode int, stdout string, stderr string, err error) {
 	fmt.Printf(">>> host:%s [%s %s]\n", t.HostAddress, command, strings.Join(args, " "))
-	// TODO: add ability to define key at the host level or use default one
-	session, err := t.openSession(t.Login, t.HostAddress, "/Users/salisauskas/.ssh/id_rsa")
-	defer session.Close() // TODO: reuse session
+	// TODO: re-use ssh sessions. Host should keep "connection" object, each command should run in its own session
+	t.SSHSession, err = t.openSession(t.Login, t.HostAddress, "/Users/salisauskas/.ssh/id_rsa")
 	if err != nil {
-		return -1, "", fmt.Sprintf("Failed to create ssh session: %v", err)
+		return -1, "", fmt.Sprintf("Failed to create ssh session: %v", err), nil
 	}
+	defer t.SSHSession.Close()
 
 	var berr bytes.Buffer
-	session.Stderr = &berr
+	t.SSHSession.Stderr = &berr
 	var bout bytes.Buffer
-	session.Stdout = &bout
+	t.SSHSession.Stdout = &bout
 	cmd := fmt.Sprintf("/bin/sh -c \"%s %s\"", command, strings.Join(args, " "))
 
-	err = session.Run(cmd)
+	err = t.SSHSession.Run(cmd)
 	if err != nil {
-		return -1, string(bout.Bytes()), string(berr.Bytes())
+		fmt.Printf("ERROR %v", err)
+		return -1, string(bout.Bytes()), string(berr.Bytes()), err
 	}
 
-	return 0, string(bout.Bytes()), ""
+	return 0, string(bout.Bytes()), "", nil
+}
+
+func (t *SSHTransport) openFileTransferSession(loginName string, hostIpAddress string, privateKeyPath string) (session *scp.Client, err error) {
+	clientConfig, _ := auth.PrivateKey(loginName, privateKeyPath, ssh.InsecureIgnoreHostKey())
+	client := scp.NewClient(hostIpAddress, &clientConfig)
+	err = client.Connect()
+	if err != nil {
+		return nil, err
+	}
+	return &client, nil
+}
+
+func (t *SSHTransport) SendFileToRemote(srcFilePath string, destFilePath string, mode string) (err error) {
+	// TODO: re-use scp sessions.
+	t.SCPSession, err = t.openFileTransferSession(t.Login, fmt.Sprintf("%s:22",t.HostAddress), "/Users/salisauskas/.ssh/id_rsa")
+	if err != nil {
+		return fmt.Errorf("failed to create session %v:", err)
+	}
+	defer t.SCPSession.Close()
+	f, err := os.Open(srcFilePath)
+	if err != nil {
+		return fmt.Errorf("failed opening file %v:", err)
+	}
+	defer f.Close()
+
+	err = t.SCPSession.CopyFile(f, destFilePath, mode)
+	if err != nil {
+		return fmt.Errorf("error while copying file: %v", err)
+	}
+	return nil
 }
 
 func (t *SSHTransport) openSession(loginName string, hostIpAddress string, privateKeyPath string) (*ssh.Session, error) {

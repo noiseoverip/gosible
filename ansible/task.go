@@ -10,6 +10,7 @@ type Task struct {
 	Name string `yaml:"name"`
 	Module modules.Module
 	When string		// raw 'when' attribute which controls if task will be executed or not
+	Register	string	// variable name to register tasks result to
 }
 
 func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -24,6 +25,15 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			t.Name = value.(string)
 		case "when":
 			t.When = fmt.Sprintf("%v", value) // This will make sure it is a string
+		case "register":
+			t.Register = fmt.Sprintf("%v", value)
+		case "debug":
+			params := map[string]interface{}{}
+			err := mapstructure.Decode(value, &params)
+			if err != nil {
+				return err
+			}
+			t.Module = modules.LoadDebug(params)
 		case "command":
 			t.Module = modules.LoadCommand(map[string]string{ "stdin": value.(string) })
 		case "template":

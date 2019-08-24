@@ -5,6 +5,7 @@ import (
 	"ansiblego/transport"
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 )
 
@@ -64,7 +65,23 @@ func(t *Template) Run(transport transport.Transport, vars map[string]interface{}
 		"\t\trendered:\n" +
 		">>> Template start\n%s\n>>>> Template end\n\n", sourcePath, destinationPath, string(buf.Bytes()), templateRendered)
 
-	resultCode, stdout, stdr := transport.Exec("echo", "not sure how to copy it yet")
+	// TODO: we could skip writing it to file and push it directly
+	tempFile, err := ioutil.TempFile(os.TempDir(), "ansiblego-*")
+	if err != nil {
+		return &ModuleExecResult{ Result: false, StdOut: "", StdErr: err.Error()}
+	}
+	written, err := tempFile.Write([]byte(templateRendered))
+	if err != nil {
+		return &ModuleExecResult{ Result: false, StdOut: "", StdErr: err.Error()}
+	} else if written < 1 {
+		fmt.Printf("WARN: 0 bytes written for template")
+		return &ModuleExecResult{ Result: false, StdOut: "", StdErr: ""}
+	}
+	fmt.Printf("Saved template to %s\n", tempFile.Name())
 
-	return &ModuleExecResult{ Result: resultCode == 0, StdOut: stdout, StdErr: stdr}
+	err = transport.SendFileToRemote(tempFile.Name(), destinationPath, "0600")
+	if err != nil {
+		return &ModuleExecResult{ Result: false, StdOut: "", StdErr: err.Error()}
+	}
+	return &ModuleExecResult{ Result: true, StdOut: "", StdErr: ""}
 }

@@ -88,6 +88,12 @@ func (playbook *Playbook) Run(inventory *Inventory, groupVars GroupVariables) er
 				if !r.Result {
 					return fmt.Errorf("module execution failed")
 				}
+				// register module output as variable
+				if task.Register != "" {
+					// TODO: module execusion result should probably be wrapped to add extra information such as
+					// execution time, module name...
+					host.Vars[task.Register] = r
+				}
 			}
 		}
 
