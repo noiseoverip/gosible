@@ -43,6 +43,13 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 				return err
 			}
 			t.Module = modules.LoadTemplate(params)
+		case "copy":
+			params := map[string]string{}
+			err := mapstructure.Decode(value, &params)
+			if err != nil {
+				return err
+			}
+			t.Module = modules.LoadCopy(params)
 		case "assert":
 			params := map[string]string{}
 			err := mapstructure.Decode(value, &params)
@@ -52,12 +59,11 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			t.Module = modules.LoadAssert(params)
 		case "set_fact":
 			params := map[string]interface{}{}
-			err := mapstructure.Decode(value, &params)	// TODO: this might be slow, need to investigate
+			err := mapstructure.Decode(value, &params)
 			if err != nil {
 				return err
 			}
 			t.Module = modules.LoadSetHostFact(params)
-
 		}
 		// TODO: default should probably module lookup form supported modules...
 	}
