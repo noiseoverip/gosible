@@ -17,9 +17,9 @@ import (
 // SSHTransport abstracts SSH communication
 type SSHTransport struct {
 	HostAddress string
-	Login string
-	SSHSession *ssh.Session
-	SCPSession *scp.Client
+	Login       string
+	SSHClient   *ssh.Client
+	SCPSession  *scp.Client
 }
 
 func CreateSSHTransport(params map[string]string) Transport {
@@ -30,19 +30,27 @@ func CreateSSHTransport(params map[string]string) Transport {
 func (t *SSHTransport) Exec(command string, args... string) (resultCode int, stdout string, stderr string, err error) {
 	fmt.Printf(">>> host:%s [%s %s]\n", t.HostAddress, command, strings.Join(args, " "))
 	// TODO: re-use ssh sessions. Host should keep "connection" object, each command should run in its own session
-	t.SSHSession, err = t.openSession(t.Login, t.HostAddress, "/Users/salisauskas/.ssh/id_rsa")
-	if err != nil {
-		return -1, "", fmt.Sprintf("Failed to create ssh session: %v", err), nil
+	if t.SSHClient == nil {
+		client, err := t.createSSHClient(t.Login, t.HostAddress, "/Users/salisauskas/.ssh/id_rsa")
+		if err != nil {
+			return -1, "", "", fmt.Errorf("failed to create client: %s", err)
+		}
+		t.SSHClient = client
 	}
-	defer t.SSHSession.Close()
+
+	session, err := t.SSHClient.NewSession()
+	if err != nil {
+		return -1, "", "", fmt.Errorf("failed to create session: %s", err)
+	}
+	defer session.Close()
 
 	var berr bytes.Buffer
-	t.SSHSession.Stderr = &berr
+	session.Stderr = &berr
 	var bout bytes.Buffer
-	t.SSHSession.Stdout = &bout
+	session.Stdout = &bout
 	cmd := fmt.Sprintf("/bin/sh -c \"%s %s\"", command, strings.Join(args, " "))
 
-	err = t.SSHSession.Run(cmd)
+	err = session.Run(cmd)
 	if err != nil {
 		fmt.Printf("ERROR %v", err)
 		return -1, string(bout.Bytes()), string(berr.Bytes()), err
@@ -81,7 +89,7 @@ func (t *SSHTransport) SendFileToRemote(srcFilePath string, destFilePath string,
 	return nil
 }
 
-func (t *SSHTransport) openSession(loginName string, hostIpAddress string, privateKeyPath string) (*ssh.Session, error) {
+func (t *SSHTransport) createSSHClient(loginName string, hostIpAddress string, privateKeyPath string) (*ssh.Client, error) {
 	sshAuth, err := SSHAuthWithKey(privateKeyPath)
 	if err != nil {
 		return nil, err
@@ -99,15 +107,7 @@ func (t *SSHTransport) openSession(loginName string, hostIpAddress string, priva
 	}
 	nodeAddr := fmt.Sprintf("%s:22", hostIpAddress)
 	util.Success("Opening SSH connection to %s@%s", loginName, nodeAddr)
-	connection, err := ssh.Dial("tcp", nodeAddr, sshConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to dial: %s", err)
-	}
-
-	session, err := connection.NewSession()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create session: %s", err)
-	}
+	return ssh.Dial("tcp", nodeAddr, sshConfig)
 
 	//modes := ssh.TerminalModes{
 	//	ssh.ECHO:          0,     // disable echoing
@@ -145,7 +145,6 @@ func (t *SSHTransport) openSession(loginName string, hostIpAddress string, priva
 	//if err := session.Wait(); err != nil {
 	//	log.Fatal(err)
 	//}
-	return session, nil
 }
 
 // SSHAuthWithKey creates ssh.AuthMethod based on certificate

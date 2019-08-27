@@ -11,7 +11,7 @@ import (
 func TestRunLocalPlaybook(t *testing.T) {
 	setup(t)
 	wd, _ := os.Getwd()
-	r := runner.Runner{ InventoryFilePath: path.Join(wd, "hosts"), PlaybookFilePath: path.Join(wd,"site.yaml") }
+	r := runner.Runner{ InventoryFilePath: path.Join(wd, "hosts"), PlaybookFilePath: path.Join(wd,"test-10Kechos.yaml") }
 	err := r.Run()
 	assert.NoError(t, err)
 }
