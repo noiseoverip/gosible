@@ -2,6 +2,7 @@ package basic
 
 import (
 	"ansiblego/runner"
+	"ansiblego/utils"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"path"
@@ -11,7 +12,10 @@ import (
 func TestRunLocalPlaybook(t *testing.T) {
 	setup(t)
 	wd, _ := os.Getwd()
-	r := runner.Runner{ InventoryFilePath: path.Join(wd, "hosts"), PlaybookFilePath: path.Join(wd,"test-10Kechos.yaml") }
+	r := runner.Runner{ Context: &runner.Context{
+		InventoryFilePath: path.Join(wd, "hosts"),
+		PlaybookFilePath: path.Join(wd,"site.yaml"),
+		Logger: utils.NewGosibleDefaultLogger()} }
 	err := r.Run()
 	assert.NoError(t, err)
 }

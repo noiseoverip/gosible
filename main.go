@@ -2,6 +2,7 @@ package main
 
 import (
 	"ansiblego/runner"
+	"ansiblego/utils"
 	"flag"
 	"fmt"
 	"os"
@@ -22,7 +23,12 @@ func run() error {
 		return err
 	}
 
-	r := &runner.Runner{PlaybookFilePath: path.Join(cwd, playbookPath), InventoryFilePath: path.Join(cwd, *inventoryPath) }
+	context := runner.Context{
+		PlaybookFilePath: path.Join(cwd, playbookPath),
+		InventoryFilePath: path.Join(cwd, *inventoryPath),
+		Logger: utils.NewGosibleDefaultLogger(),
+	}
+	r := &runner.Runner{&context}
 	err = r.Run()
 	if err != nil {
 		return fmt.Errorf("runner error: %v", err)
