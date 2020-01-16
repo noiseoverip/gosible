@@ -6,12 +6,12 @@ import (
 )
 
 type Host struct {
-	Name string
-	IpAddr string
-	Login string
+	Name      string
+	IpAddr    string
+	Login     string
 	Transport transport.Transport
-	Params map[string]string	// These are host params set in inventory as part of host declaration
-	Groups []string
+	Params    map[string]string // These are host params set in inventory as part of host declaration
+	Groups    []string
 	// These are variables set through group_vars, set_facts, cli...
 	Vars HostVariables
 }
@@ -24,17 +24,19 @@ type Host struct {
 func UnmarshalHost(input string, h *Host) error {
 	els := strings.Split(input, " ")
 
+	// Set defaults
+	h.Params = make(map[string]string, 2)
+	h.Params["ansible_user"] = "root"
+	h.Params["ansible_host"] = "127.0.0.1"
+
 	// For now assume that first element is always an alias, so we force to use aliases !
 	h.Name = els[0]
 	for _, el := range els[1:] {
 		// Put all key-value pairs into a map so we can have any attributes attached and pass them to transport...
-		keyVal:= strings.Split(el, "=")
-		h.Params = make(map[string]string, 2)
-		// Set defaults
-		h.Params["ansible_user"] = "root"
-		h.Params["ansible_host"] = "127.0.0.1"
+		keyVal := strings.Split(el, "=")
 
 		h.Params[keyVal[0]] = keyVal[1]
+
 		// Parse default keys-value pairs
 		switch keyVal[0] {
 		case "ansible_host":

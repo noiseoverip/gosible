@@ -2,7 +2,7 @@ package runner
 
 import (
 	"ansiblego/ansible"
-	"ansiblego/utils"
+	"ansiblego/logging"
 	"fmt"
 	"os"
 	"path"
@@ -10,9 +10,9 @@ import (
 
 // Context holds shared objects
 type Context struct {
-	Logger *utils.GosibleLogger
+	Logger            *logging.GosibleLogger
 	InventoryFilePath string
-	PlaybookFilePath string
+	PlaybookFilePath  string
 }
 
 // Runner is responsible for loading all required files and executing a playbook
@@ -31,9 +31,9 @@ func (r *Runner) Run() error {
 		return fmt.Errorf("failed to load inventory from path %s: %v", r.Context.InventoryFilePath, err)
 	}
 
-	fmt.Printf("\n# INVENTORY:\n")
+	r.Context.Logger.Verbose("\n# INVENTORY:\n")
 	for _, g := range inventory.Groups {
-		fmt.Printf("\tGroup: %s\n", g.Name)
+		r.Context.Logger.Verbosef("\tGroup: %s\n", g.Name)
 		for _, h := range g.Hosts {
 			fmt.Printf("\t\tHost: %s %s\n", h.Name, h.IpAddr)
 		}

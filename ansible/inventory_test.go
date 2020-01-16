@@ -8,7 +8,7 @@ import (
 )
 
 var inventoryExample = []byte(`
-host1
+host1 param1=param1value
 host2
 
 [group1]
@@ -25,6 +25,21 @@ host2
 
 `)
 
+func TestReadParams(t *testing.T) {
+	var r io.Reader
+	r = bytes.NewReader(inventoryExample)
+
+	inv := new(Inventory)
+	err := ReadInventory(r, inv)
+	failIfError(t, err)
+	assert.NotNil(t, inv)
+	assert.NotEmpty(t, inv)
+
+	allGroup, ok := inv.groupByName("all")
+	assert.True(t, ok)
+	assert.Exactly(t, 2, len(allGroup.Hosts))
+}
+
 func TestReadInventory(t *testing.T) {
 	var r io.Reader
 	r = bytes.NewReader(inventoryExample)
@@ -38,5 +53,4 @@ func TestReadInventory(t *testing.T) {
 	allGroup, ok := inv.groupByName("all")
 	assert.True(t, ok)
 	assert.Exactly(t, 2, len(allGroup.Hosts))
-
 }

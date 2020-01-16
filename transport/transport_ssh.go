@@ -1,7 +1,7 @@
 package transport
 
 import (
-	"bbgithub.dev.bloomberg.com/babka/cli/pkg/util"
+	"bbgithub.dev.bloomberg.com/babka/cli/pkg/logging"
 	"bytes"
 	"fmt"
 	"github.com/bramvdbogaerde/go-scp"
@@ -27,7 +27,7 @@ func CreateSSHTransport(params map[string]string) Transport {
 }
 
 // Exec executes command
-func (t *SSHTransport) Exec(command string, args... string) (resultCode int, stdout string, stderr string, err error) {
+func (t *SSHTransport) Exec(command string, args ...string) (resultCode int, stdout string, stderr string, err error) {
 	fmt.Printf(">>> host:%s [%s %s]\n", t.HostAddress, command, strings.Join(args, " "))
 	// TODO: re-use ssh sessions. Host should keep "connection" object, each command should run in its own session
 	if t.SSHClient == nil {
@@ -71,7 +71,7 @@ func (t *SSHTransport) openFileTransferSession(loginName string, hostIpAddress s
 
 func (t *SSHTransport) SendFileToRemote(srcFilePath string, destFilePath string, mode string) (err error) {
 	// TODO: re-use scp sessions.
-	t.SCPSession, err = t.openFileTransferSession(t.Login, fmt.Sprintf("%s:22",t.HostAddress), "/Users/salisauskas/.ssh/id_rsa")
+	t.SCPSession, err = t.openFileTransferSession(t.Login, fmt.Sprintf("%s:22", t.HostAddress), "/Users/salisauskas/.ssh/id_rsa")
 	if err != nil {
 		return fmt.Errorf("failed to create session %v:", err)
 	}
@@ -106,7 +106,8 @@ func (t *SSHTransport) createSSHClient(loginName string, hostIpAddress string, p
 		Timeout: time.Second * 5,
 	}
 	nodeAddr := fmt.Sprintf("%s:22", hostIpAddress)
-	util.Success("Opening SSH connection to %s@%s", loginName, nodeAddr)
+
+	logging.Success("Opening SSH connection to %s@%s", loginName, nodeAddr)
 	return ssh.Dial("tcp", nodeAddr, sshConfig)
 
 	//modes := ssh.TerminalModes{

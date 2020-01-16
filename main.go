@@ -1,8 +1,8 @@
 package main
 
 import (
+	"ansiblego/logging"
 	"ansiblego/runner"
-	"ansiblego/utils"
 	"flag"
 	"fmt"
 	"os"
@@ -10,7 +10,6 @@ import (
 )
 
 var inventoryPath = flag.String("i", "", "Path to inventory")
-
 
 func run() error {
 	flag.Parse()
@@ -24,9 +23,9 @@ func run() error {
 	}
 
 	context := runner.Context{
-		PlaybookFilePath: path.Join(cwd, playbookPath),
+		PlaybookFilePath:  path.Join(cwd, playbookPath),
 		InventoryFilePath: path.Join(cwd, *inventoryPath),
-		Logger: utils.NewGosibleDefaultLogger(),
+		Logger:            logging.NewGosibleDefaultLogger(),
 	}
 	r := &runner.Runner{&context}
 	err = r.Run()

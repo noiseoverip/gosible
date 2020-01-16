@@ -1,4 +1,6 @@
-# Features
+# Detailed features list
+This is a list of Ansible features that are implemented in AnsibleGO
+
 * Read inventory group_vars
 * Read play yaml file
 * Template module - render jinj2 templates to target host
@@ -17,5 +19,6 @@ Ansible copies module code to remote target, then generates a script that invoke
 This is quite a lot of operations to perform. AnsibleGO simply executes provided command on target host, this has
 certain limitations but is a much faster approach
 
-## Templates
-TODO
+## Integration tests
+Integration tests require a target host.
+FOr now multipass can be used (TODO: automate multi pass setup)
