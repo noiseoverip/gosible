@@ -42,7 +42,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			if err != nil {
 				return err
 			}
-			t.Module = modules.LoadTemplate(params)
+			t.Module = modules.NewTemplate(params)
 		case "copy":
 			params := map[string]string{}
 			err := mapstructure.Decode(value, &params)

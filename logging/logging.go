@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+var mlog = NewGosibleDefaultLogger()
+
 type GosibleLogger struct {
 	// WireLogger is a handle for most verbose logging
 	WireLogger *log.Logger
@@ -20,18 +22,30 @@ type GosibleLogger struct {
 	WarningLogger *log.Logger
 	// ErrorLogger is a handle for error logging
 	ErrorLogger *log.Logger
+
+	Level int
+}
+
+func Info(format string, v ...interface{}) {
+	mlog.InfoLogger.Printf(format, v...)
+}
+
+func Debug(format string, v ...interface{}) {
+	mlog.VerboseLogger.Printf(format, v...)
+}
+
+func (g *GosibleLogger) SetLevel(level int) {
+	g.Level = level
 }
 
 func (g *GosibleLogger) Info(msg interface{}) {
 	g.InfoLogger.Print(msg)
 }
 
-func (g *GosibleLogger) Verbose(msg interface{}) {
-	g.VerboseLogger.Print(msg)
-}
-
-func (g *GosibleLogger) Verbosef(format string, v ...interface{}) {
-	g.VerboseLogger.Printf(format, v...)
+func (g *GosibleLogger) Verbose(format string, v ...interface{}) {
+	if g.Level > 0 {
+		g.VerboseLogger.Printf(format, v...)
+	}
 }
 
 func (g *GosibleLogger) Warn(msg interface{}) {
@@ -75,5 +89,9 @@ func NewGosibleLogger(
 }
 
 func NewGosibleDefaultLogger() *GosibleLogger {
-	return NewGosibleLogger(ioutil.Discard, ioutil.Discard, ioutil.Discard, os.Stdout, os.Stdout, os.Stdout)
+	return NewGosibleLogger(ioutil.Discard, ioutil.Discard, os.Stdout, os.Stdout, os.Stdout, os.Stdout)
+}
+
+func SetLogger(logger *GosibleLogger) {
+	mlog = logger
 }

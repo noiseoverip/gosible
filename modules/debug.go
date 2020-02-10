@@ -1,8 +1,8 @@
 package modules
 
 import (
+	"ansiblego/logging"
 	"ansiblego/transport"
-	"fmt"
 	"gopkg.in/yaml.v2"
 )
 
@@ -20,11 +20,11 @@ func(d *Debug) Run(transport transport.Transport, vars map[string]interface{}) *
 	if v, ok := vars[d.Var]; ok {
 		b, err := yaml.Marshal(v)
 		if err != nil {
-			fmt.Printf("ERROR: %v", err)
+			logging.Info("ERROR: %v", err)
 			return &ModuleExecResult{ Result: false }
 		}
 		value = string(b)
 	}
-	fmt.Printf(">> DEBUG: %s:\n%s\n>>\n", d.Var, value)
+	logging.Info(">> %s:\n%s\n>>\n", d.Var, value)
 	return &ModuleExecResult{ Result: true }
 }

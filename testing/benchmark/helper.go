@@ -15,7 +15,12 @@ type BenchmarkConfig struct {
 func RunGosible(t *testing.T, config *BenchmarkConfig) {
 	setup(t)
 	wd, _ := os.Getwd()
-	r := runner.Runner{ InventoryFilePath: path.Join(wd, "hosts"), PlaybookFilePath: path.Join(wd, config.PlaybookName) }
+	r := runner.Runner{
+		Context: &runner.Context{
+			InventoryFilePath: path.Join(wd, "hosts"),
+			PlaybookFilePath:  path.Join(wd, config.PlaybookName),
+		},
+	}
 	err := r.Run()
 	assert.NoError(t, err)
 }

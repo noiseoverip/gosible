@@ -1,16 +1,15 @@
 package modules
 
 import (
+	"ansiblego/logging"
 	"ansiblego/templating"
 	"ansiblego/transport"
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
 )
 
 // Command implements module interface and executes CLI commands on transport layer
-// Pipes are not supported at this point
 type Template struct {
 	// Source file on local machine
 	Src string
@@ -23,7 +22,7 @@ type Template struct {
 //		src: $localPath
 //		dest: $remotePath
 //
-func LoadTemplate(args map[string]string) Module {
+func NewTemplate(args map[string]string) Module {
 	return &Template{Src: args["src"], Dest:  args["dest"]}
 }
 
@@ -42,7 +41,7 @@ func(t *Template) Run(transport transport.Transport, vars map[string]interface{}
 	buf := new(bytes.Buffer)
 	bytesRead, err := buf.ReadFrom(templateSrcFile)
 	if bytesRead < 1 {
-		fmt.Printf("WARN: template %s looks empty", sourcePath)
+		logging.Info("WARN: template %s looks empty", sourcePath)
 	}
 
 
@@ -57,7 +56,7 @@ func(t *Template) Run(transport transport.Transport, vars map[string]interface{}
 	if err != nil {
 		return ErrorModuleConfig("failed to determine template destination path: %v", err)
 	}
-	fmt.Printf("\nTemplate:\n" +
+	logging.Info("\nTemplate:\n" +
 		"\t\tsource: %s\n" +
 		"\t\tdest: %s\n" +
 		"\t\traw:\n" +
@@ -74,10 +73,10 @@ func(t *Template) Run(transport transport.Transport, vars map[string]interface{}
 	if err != nil {
 		return &ModuleExecResult{ Result: false, StdOut: "", StdErr: err.Error()}
 	} else if written < 1 {
-		fmt.Printf("WARN: 0 bytes written for template")
+		logging.Info("WARN: 0 bytes written for template")
 		return &ModuleExecResult{ Result: false, StdOut: "", StdErr: ""}
 	}
-	fmt.Printf("Saved template to %s\n", tempFile.Name())
+	logging.Info("Saved template to %s\n", tempFile.Name())
 
 	err = transport.SendFileToRemote(tempFile.Name(), destinationPath, "0600")
 	if err != nil {

@@ -10,12 +10,14 @@ import (
 )
 
 var inventoryPath = flag.String("i", "", "Path to inventory")
+var verbosity = flag.Int("v", 0, "Verbosity")
 
 func run() error {
 	flag.Parse()
 	if len(flag.Args()) < 1 {
 		return fmt.Errorf("too few arguments provided, please provide path to playbook") //TODO: show to print to stderr
 	}
+
 	playbookPath := flag.Arg(0)
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -25,9 +27,8 @@ func run() error {
 	context := runner.Context{
 		PlaybookFilePath:  path.Join(cwd, playbookPath),
 		InventoryFilePath: path.Join(cwd, *inventoryPath),
-		Logger:            logging.NewGosibleDefaultLogger(),
 	}
-	r := &runner.Runner{&context}
+	r := &runner.Runner{Context: &context}
 	err = r.Run()
 	if err != nil {
 		return fmt.Errorf("runner error: %v", err)
@@ -41,7 +42,7 @@ func run() error {
 func main() {
 	err := run()
 	if err != nil {
-		fmt.Printf(err.Error())
+		logging.Info(err.Error())
 		os.Exit(1)
 	}
 }

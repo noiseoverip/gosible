@@ -1,13 +1,14 @@
 package transport
 
 import (
-	"bbgithub.dev.bloomberg.com/babka/cli/pkg/logging"
+	"ansiblego/logging"
 	"bytes"
 	"fmt"
 	"github.com/bramvdbogaerde/go-scp"
 	"github.com/bramvdbogaerde/go-scp/auth"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
+	"log"
 	"net"
 	"os"
 	"strings"
@@ -28,7 +29,7 @@ func CreateSSHTransport(params map[string]string) Transport {
 
 // Exec executes command
 func (t *SSHTransport) Exec(command string, args ...string) (resultCode int, stdout string, stderr string, err error) {
-	fmt.Printf(">>> host:%s [%s %s]\n", t.HostAddress, command, strings.Join(args, " "))
+	logging.Info(">>> host:%s [%s %s]\n", t.HostAddress, command, strings.Join(args, " "))
 	// TODO: re-use ssh sessions. Host should keep "connection" object, each command should run in its own session
 	if t.SSHClient == nil {
 		client, err := t.createSSHClient(t.Login, t.HostAddress, "/Users/salisauskas/.ssh/id_rsa")
@@ -52,7 +53,7 @@ func (t *SSHTransport) Exec(command string, args ...string) (resultCode int, std
 
 	err = session.Run(cmd)
 	if err != nil {
-		fmt.Printf("ERROR %v", err)
+		logging.Info("ERROR %v", err)
 		return -1, string(bout.Bytes()), string(berr.Bytes()), err
 	}
 
@@ -107,7 +108,7 @@ func (t *SSHTransport) createSSHClient(loginName string, hostIpAddress string, p
 	}
 	nodeAddr := fmt.Sprintf("%s:22", hostIpAddress)
 
-	logging.Success("Opening SSH connection to %s@%s", loginName, nodeAddr)
+	log.Printf("Opening SSH connection to %s@%s", loginName, nodeAddr)
 	return ssh.Dial("tcp", nodeAddr, sshConfig)
 
 	//modes := ssh.TerminalModes{

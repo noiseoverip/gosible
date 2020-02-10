@@ -1,8 +1,15 @@
 build:
 	echo "Building"
 
-test-integration:
-	go test ansiblego/testing/basic
+build:
+	go build
 
-test: test-integration
+test-integration:
+	go test --tags integration ./...
+
+test:
+	go test ./...
+
+benchmark:
+
 

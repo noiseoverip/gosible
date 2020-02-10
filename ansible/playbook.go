@@ -1,6 +1,7 @@
 package ansible
 
 import (
+	"ansiblego/logging"
 	"ansiblego/templating"
 	"ansiblego/transport"
 	"bytes"
@@ -102,5 +103,5 @@ func (playbook *Playbook) Run(inventory *Inventory, groupVars GroupVariables) er
 }
 
 func log(msg string, args... interface{}) {
-	fmt.Printf(msg, args...)
+	logging.Info(msg, args...)
 }

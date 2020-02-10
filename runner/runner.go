@@ -10,7 +10,6 @@ import (
 
 // Context holds shared objects
 type Context struct {
-	Logger            *logging.GosibleLogger
 	InventoryFilePath string
 	PlaybookFilePath  string
 }
@@ -21,6 +20,7 @@ type Runner struct {
 }
 
 func (r *Runner) Run() error {
+
 	inventoryFile, err := os.Open(r.Context.InventoryFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open file %v", err)
@@ -31,14 +31,14 @@ func (r *Runner) Run() error {
 		return fmt.Errorf("failed to load inventory from path %s: %v", r.Context.InventoryFilePath, err)
 	}
 
-	r.Context.Logger.Verbose("\n# INVENTORY:\n")
+	logging.Info("\n# INVENTORY:\n")
 	for _, g := range inventory.Groups {
-		r.Context.Logger.Verbosef("\tGroup: %s\n", g.Name)
+		logging.Info("\tGroup: %s\n", g.Name)
 		for _, h := range g.Hosts {
-			fmt.Printf("\t\tHost: %s %s\n", h.Name, h.IpAddr)
+			logging.Info("\t\tHost: %s %s\n", h.Name, h.IpAddr)
 		}
 	}
-	fmt.Printf("\n")
+	logging.Info("\n")
 
 	groupVars, err := ansible.LoadGroupVars(path.Dir(r.Context.InventoryFilePath))
 	if err != nil {

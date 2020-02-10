@@ -16,12 +16,12 @@ func TestJinjaTemplateBasic(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(out)
+	t.Logf("%s\n", out)
 }
 
 func TestJinjaTemplateCondition(t *testing.T) {
 	conditional := fmt.Sprintf("{%% if %s %%} True {%% else %%} False {%% endif %%}", "testvar == 'florian' ")
-	fmt.Println(conditional)
+	t.Log(conditional)
 	tpl, err := pongo2.FromString(conditional)
 	if err != nil {
 		panic(err)
@@ -33,5 +33,5 @@ func TestJinjaTemplateCondition(t *testing.T) {
 	if strings.TrimSpace(out) != "True" {
 		t.Fatal()
 	}
-	fmt.Println(out)
+	t.Log(out)
 }

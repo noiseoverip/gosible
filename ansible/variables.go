@@ -1,6 +1,7 @@
 package ansible
 
 import (
+	"ansiblego/logging"
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -28,13 +29,13 @@ func LoadGroupVars(dir string) (groupVars GroupVariables, err error) {
 	root := filepath.Join(dir, "group_vars")
 	// Exist if doesn't exist
 	if _, err := os.Stat(root); os.IsNotExist(err) {
-		fmt.Printf("no group_vars dir found, skipping\n")
+		logging.Info("no group_vars dir found, skipping\n")
 		return nil, nil
 	}
 	// Assemble a list of tier variable files
 	err = filepath.Walk(root, func(filePath string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
-			fmt.Printf("Loading group vars from: %s\n", filePath)
+			logging.Info("Loading group vars from: %s\n", filePath)
 			group := path.Base(path.Dir(filePath))
 
 			var variables = make(map[string]interface{})
