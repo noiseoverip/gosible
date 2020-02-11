@@ -5,10 +5,11 @@ build:
 	go build
 
 test-integration:
-	go test --tags integration ./...
+	# count=1 is idiomatic way to disable cashing, all that needs to be done is to set an unknown flag
+	go test --count 1 --tags integration ./...
 
 test:
-	go test ./...
+	go test --count=1  ./...
 
 benchmark:
 
