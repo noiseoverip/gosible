@@ -1,4 +1,4 @@
-node-0 ansible_host=127.0.0.1 ansible_user=salisauskas
+node-0 ansible_host=192.168.64.4 ansible_user=ubuntu
 
 [special]
 node-0

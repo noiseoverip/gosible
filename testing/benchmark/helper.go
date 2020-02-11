@@ -7,39 +7,36 @@ import (
 	"os/exec"
 	"path"
 	"testing"
+	"time"
 )
+
 type BenchmarkConfig struct {
 	PlaybookName string
 }
 
 func RunGosible(t *testing.T, config *BenchmarkConfig) {
-	setup(t)
+	start := time.Now().Nanosecond()
 	wd, _ := os.Getwd()
 	r := runner.Runner{
 		Context: &runner.Context{
-			InventoryFilePath: path.Join(wd, "hosts"),
-			PlaybookFilePath:  path.Join(wd, config.PlaybookName),
+			InventoryFilePath: path.Join(wd, "files", "hosts"),
+			PlaybookFilePath:  path.Join(wd, "files", config.PlaybookName),
 		},
 	}
 	err := r.Run()
 	assert.NoError(t, err)
+	t.Logf("Duration %d", time.Now().Nanosecond()-start)
 }
 
 func RunAnsible(t *testing.T, config *BenchmarkConfig) {
-	setup(t)
-	cmd := exec.Command("ansible-playbook",  "-i", "hosts", config.PlaybookName)
+	wd, _ := os.Getwd()
+	hostsPath := path.Join(wd, "files", "hosts")
+	playbookPath := path.Join(wd, "files", config.PlaybookName)
+	cmd := exec.Command("ansible-playbook", "-i", hostsPath, playbookPath)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	if err := cmd.Run(); err != nil {
 		t.Errorf("%v", err)
 		t.Fatalf("Failed")
 	}
-}
-
-func setup(t *testing.T) {
-	err := os.Chdir("files")
-	assert.Nil(t, err)
-	dir, err := os.Getwd()
-	assert.Nil(t, err)
-	t.Logf("current dir %s", dir)
 }

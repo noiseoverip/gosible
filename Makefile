@@ -12,5 +12,6 @@ test:
 	go test --count=1  ./...
 
 benchmark:
-
+	# Run ansiblego benchmark test
+	go test -v --count=1 ./testing/benchmark/...
 
