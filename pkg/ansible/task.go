@@ -1,16 +1,16 @@
 package ansible
 
 import (
-	"ansiblego/modules"
+	"ansiblego/pkg/modules"
 	"fmt"
 	"github.com/mitchellh/mapstructure"
 )
 
 type Task struct {
-	Name string `yaml:"name"`
-	Module modules.Module
-	When string		// raw 'when' attribute which controls if task will be executed or not
-	Register	string	// variable name to register tasks result to
+	Name     string `yaml:"name"`
+	Module   modules.Module
+	When     string		// raw 'when' attribute which controls if task will be executed or not
+	Register string	// variable name to register tasks result to
 }
 
 func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {

@@ -1,7 +1,7 @@
 package basic
 
 import (
-	"ansiblego/runner"
+	"ansiblego/pkg"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"os/exec"
@@ -17,11 +17,12 @@ type BenchmarkConfig struct {
 func RunGosible(t *testing.T, config *BenchmarkConfig) {
 	start := time.Now().Nanosecond()
 	wd, _ := os.Getwd()
-	r := runner.Runner{
-		Context: &runner.Context{
+	r := pkg.Runner{
+		Context: &pkg.Context{
 			InventoryFilePath: path.Join(wd, "files", "hosts"),
 			PlaybookFilePath:  path.Join(wd, "files", config.PlaybookName),
 		},
+		Strategy: &pkg.SequentialExecuter{},
 	}
 	err := r.Run()
 	assert.NoError(t, err)

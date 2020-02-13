@@ -19,7 +19,7 @@ var hostsExample = []byte(`
   roles:
     - role1
 
-# TODO: add support for role as a map
+# TODO: Add support for role as a map
 #- hosts: all
 #  roles:
 #    - { name: role1 }

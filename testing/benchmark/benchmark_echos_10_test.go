@@ -1,3 +1,5 @@
+// +build integration
+
 package basic
 
 import (
@@ -9,6 +11,5 @@ func TestEchos10GO(t *testing.T) {
 }
 
 func TestEchos10Ansible(t *testing.T) {
-	RunAnsible(t,  &BenchmarkConfig{PlaybookName: "test_echos_10.yaml"})
+	RunAnsible(t, &BenchmarkConfig{PlaybookName: "test_echos_10.yaml"})
 }
-

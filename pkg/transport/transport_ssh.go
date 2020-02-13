@@ -1,7 +1,7 @@
 package transport
 
 import (
-	"ansiblego/logging"
+	"ansiblego/pkg/logging"
 	"bytes"
 	"fmt"
 	"github.com/bramvdbogaerde/go-scp"

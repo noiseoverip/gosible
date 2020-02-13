@@ -1,8 +1,8 @@
 package modules
 
 import (
-	"ansiblego/templating"
-	"ansiblego/transport"
+	"ansiblego/pkg/templating"
+	"ansiblego/pkg/transport"
 	"strings"
 )
 

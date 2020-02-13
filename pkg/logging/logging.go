@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-var mlog = NewGosibleDefaultLogger()
+var L = NewGosibleDefaultLogger()
 
 type GosibleLogger struct {
 	// WireLogger is a handle for most verbose logging
@@ -27,11 +27,11 @@ type GosibleLogger struct {
 }
 
 func Info(format string, v ...interface{}) {
-	mlog.InfoLogger.Printf(format, v...)
+	L.InfoLogger.Printf(format, v...)
 }
 
 func Debug(format string, v ...interface{}) {
-	mlog.VerboseLogger.Printf(format, v...)
+	L.VerboseLogger.Printf(format, v...)
 }
 
 func (g *GosibleLogger) SetLevel(level int) {
@@ -90,8 +90,4 @@ func NewGosibleLogger(
 
 func NewGosibleDefaultLogger() *GosibleLogger {
 	return NewGosibleLogger(ioutil.Discard, ioutil.Discard, os.Stdout, os.Stdout, os.Stdout, os.Stdout)
-}
-
-func SetLogger(logger *GosibleLogger) {
-	mlog = logger
 }

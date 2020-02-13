@@ -1,9 +1,9 @@
 package ansible
 
 import (
-	"ansiblego/logging"
-	"ansiblego/templating"
-	"ansiblego/transport"
+	"ansiblego/pkg/logging"
+	"ansiblego/pkg/templating"
+	"ansiblego/pkg/transport"
 	"bytes"
 	"fmt"
 	"gopkg.in/yaml.v2"
@@ -46,7 +46,7 @@ func (playbook *Playbook) Run(inventory *Inventory, groupVars GroupVariables) er
 		}
 
 		// TODO: the way it is done now, host variable will not persist across plays
-		// Build initial host variables by looping though groups it belongs to add variables of that group
+		// Build initial host variables by looping though groups it belongs to Add variables of that group
 		// Precedence:
 		// -- group vars (ordered alphabetically )
 		// -- host params (from inventory)
@@ -54,7 +54,7 @@ func (playbook *Playbook) Run(inventory *Inventory, groupVars GroupVariables) er
 		for _, host := range hosts {
 			for _, group := range host.Groups {
 				if vars, found := groupVars[group]; found {
-					host.Vars.add(vars)
+					host.Vars.Add(vars)
 				}
 			}
 			// Override group variables with host params from inventory
@@ -91,7 +91,7 @@ func (playbook *Playbook) Run(inventory *Inventory, groupVars GroupVariables) er
 				}
 				// register module output as variable
 				if task.Register != "" {
-					// TODO: module execusion result should probably be wrapped to add extra information such as
+					// TODO: module execusion result should probably be wrapped to Add extra information such as
 					// execution time, module name...
 					host.Vars[task.Register] = r
 				}

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"ansiblego/logging"
-	"ansiblego/runner"
+	"ansiblego/pkg"
+	"ansiblego/pkg/logging"
 	"flag"
 	"fmt"
 	"os"
@@ -24,11 +24,11 @@ func run() error {
 		return err
 	}
 
-	context := runner.Context{
+	context := pkg.Context{
 		PlaybookFilePath:  path.Join(cwd, playbookPath),
 		InventoryFilePath: path.Join(cwd, *inventoryPath),
 	}
-	r := &runner.Runner{Context: &context}
+	r := &pkg.Runner{Context: &context}
 	err = r.Run()
 	if err != nil {
 		return fmt.Errorf("runner error: %v", err)

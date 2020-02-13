@@ -3,20 +3,17 @@
 package basic_test
 
 import (
-	"ansiblego/runner"
+	"ansiblego/pkg"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"path"
 	"testing"
 )
 
-func IntegrationRunLocalPlaybook(t *testing.T) {
+func TestBasicPlaybook(t *testing.T) {
 	setup(t)
 	wd, _ := os.Getwd()
-	r := runner.Runner{Context: &runner.Context{
-		InventoryFilePath: path.Join(wd, "hosts"),
-		PlaybookFilePath:  path.Join(wd, "site.yaml"),
-	}}
+	r := pkg.NewRunner(path.Join(wd, "hosts"), path.Join(wd, "site.yaml"))
 	err := r.Run()
 	assert.NoError(t, err)
 }

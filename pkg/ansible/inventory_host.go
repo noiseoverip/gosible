@@ -1,7 +1,7 @@
 package ansible
 
 import (
-	"ansiblego/transport"
+	"ansiblego/pkg/transport"
 	"strings"
 )
 

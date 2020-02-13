@@ -6,5 +6,5 @@ package ansible
 //		t.Fatalf("%v", err)
 //	}
 //	t.Log(fmt.Printf("%s", vars))
-//	// TODO: this is working, add asserts and it will be OK for now
+//	// TODO: this is working, Add asserts and it will be OK for now
 //}

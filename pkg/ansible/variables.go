@@ -1,7 +1,7 @@
 package ansible
 
 import (
-	"ansiblego/logging"
+	"ansiblego/pkg/logging"
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -16,7 +16,7 @@ type GroupVariables map[string]map[string]interface{}
 
 type HostVariables map[string]interface{}
 
-func (hv HostVariables) add(newVars map[string]interface{}) {
+func (hv HostVariables) Add(newVars map[string]interface{}) {
 	for k,v := range newVars {
 		hv[k] = v
 	}

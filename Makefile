@@ -4,14 +4,14 @@ build:
 build:
 	go build
 
-test-integration:
-	# count=1 is idiomatic way to disable cashing, all that needs to be done is to set an unknown flag
-	go test --count 1 --tags integration ./...
-
 test:
-	go test --count=1  ./...
+	go test ./...
 
-benchmark:
+test-integration:
+	go test --count 1 --tags integration ./testing/integration/...
+
+test-benchmark:
 	# Run ansiblego benchmark test
-	go test -v --count=1 ./testing/benchmark/...
+	go test -v --count=1 --tags benchmark ./testing/benchmark/...
 
+test-all: test test-integration

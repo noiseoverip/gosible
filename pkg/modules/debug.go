@@ -1,8 +1,8 @@
 package modules
 
 import (
-	"ansiblego/logging"
-	"ansiblego/transport"
+	"ansiblego/pkg/logging"
+	"ansiblego/pkg/transport"
 	"gopkg.in/yaml.v2"
 )
 
