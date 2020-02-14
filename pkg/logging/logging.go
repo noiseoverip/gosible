@@ -55,8 +55,8 @@ func (g *GosibleLogger) Warn(msg interface{}) {
 func NewGosibleLogger(
 	wireHandle io.Writer,
 	traceHandle io.Writer,
-	infoHandle io.Writer,
 	verboseHandle io.Writer,
+	infoHandle io.Writer,
 	warningHandle io.Writer,
 	errorHandle io.Writer) *GosibleLogger {
 
@@ -69,9 +69,7 @@ func NewGosibleLogger(
 		"INFO: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
 
-	l.VerboseLogger = log.New(verboseHandle,
-		"DEBUG: ",
-		log.Ldate|log.Ltime|log.Lshortfile)
+	l.SetVerbose(verboseHandle)
 
 	l.WarningLogger = log.New(warningHandle,
 		"WARNING: ",
@@ -88,8 +86,14 @@ func NewGosibleLogger(
 	return &l
 }
 
+func (g *GosibleLogger) SetVerbose(writer io.Writer) {
+	g.VerboseLogger = log.New(writer,
+		"DEBUG: ",
+		log.Ldate|log.Ltime|log.Lshortfile)
+}
+
 func NewGosibleDefaultLogger() *GosibleLogger {
-	return NewGosibleLogger(ioutil.Discard, ioutil.Discard, os.Stdout, os.Stdout, os.Stdout, os.Stdout)
+	return NewGosibleLogger(ioutil.Discard, ioutil.Discard, ioutil.Discard, os.Stdout, os.Stdout, os.Stdout)
 }
 
 func NewGosibleSilentLogger() *GosibleLogger {

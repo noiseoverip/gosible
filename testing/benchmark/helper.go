@@ -3,6 +3,7 @@ package benchmark
 import (
 	"ansiblego/pkg"
 	"ansiblego/pkg/logging"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -11,17 +12,28 @@ import (
 	"time"
 )
 
+const (
+	LOGGING_DEFAULT = iota // logs only from benchmark tool and errors from gosible/ansible
+	LOGGING_BASIC	// normal logging from gosible/ansible
+	LOGGING_VERBOSE // verbose logging from gosible/ansible
+	)
+
 type BenchmarkConfig struct {
 	PlaybookName string
 	ExpectedMaxDurationSec int64
-	Verbose bool
+	Verbose int
 }
 
 func RunGosible(config *BenchmarkConfig) error {
-	if !config.Verbose {
-		// Disable gosible logging, leave only error logs
+	switch config.Verbose {
+	case LOGGING_DEFAULT:
 		logging.L = logging.NewGosibleSilentLogger()
+	case LOGGING_BASIC:
+		logging.L = logging.NewGosibleDefaultLogger()
+	case LOGGING_VERBOSE:
+		logging.L.SetVerbose(os.Stdout)
 	}
+
 	r := pkg.Runner{
 		Context: &pkg.Context{
 			InventoryFilePath: path.Join(resourcePath(), "hosts"),
@@ -43,15 +55,25 @@ func RunGosible(config *BenchmarkConfig) error {
 }
 
 func RunAnsible(config *BenchmarkConfig) error {
-	playbookPath := path.Join(resourcePath(), config.PlaybookName)
-	cmd := exec.Command("ansible-playbook", "-i", path.Join(resourcePath(), "hosts"), playbookPath)
-	if config.Verbose {
-		log.Printf("\t %s %s", cmd.Path, strings.Join(cmd.Args, " ") )
+	os.Chdir(resourcePath())
+	cmd := exec.Command("ansible-playbook", "-i",  "hosts")
+	ansibleVerbosity := 0
+	if config.Verbose >= LOGGING_DEFAULT {
+		cmd.Stderr = os.Stderr
 	}
-	cmd.Stderr = os.Stderr
-	if config.Verbose {
+	if config.Verbose > LOGGING_DEFAULT {
+		log.Printf("\t %s %s", cmd.Path, strings.Join(cmd.Args, " ") )
 		cmd.Stdout = os.Stdout
 	}
+	if config.Verbose >= LOGGING_VERBOSE {
+		ansibleVerbosity = 3
+	}
+	if ansibleVerbosity > 0 {
+		cmd.Args = append(cmd.Args, fmt.Sprintf("-%s", strings.Repeat("v", ansibleVerbosity)))
+	}
+	// add path to playbook at the end
+	cmd.Args = append(cmd.Args, config.PlaybookName)
+
 	start := time.Now().Unix()
 	if err := cmd.Run(); err != nil {
 		return err
