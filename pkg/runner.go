@@ -22,14 +22,14 @@ type Context struct {
 
 // Runner is responsible for loading all required files and executing a playbook
 type Runner struct {
-	Context *Context
+	Context  *Context
 	Strategy Executer
 }
 
 func NewRunner(inventory string, playbook string) *Runner {
 	return &Runner{
 		Context:  &Context{InventoryFilePath: inventory, PlaybookFilePath: playbook},
-		Strategy: &SequentialExecuter{},
+		Strategy: NewSequentialExecuter(),
 	}
 }
 
@@ -73,8 +73,11 @@ func (r *Runner) Run() error {
 	return r.Strategy.Execute(playbook, inventory, groupVars)
 }
 
+func NewSequentialExecuter() Executer {
+	return &SequentialExecuter{}
+}
+
 type SequentialExecuter struct {
-	
 }
 
 func (s SequentialExecuter) Execute(playbook *ansible.Playbook, inventory *ansible.Inventory, vars ansible.GroupVariables) error {
@@ -99,7 +102,7 @@ func (s SequentialExecuter) Execute(playbook *ansible.Playbook, inventory *ansib
 				}
 			}
 			// Override group variables with host params from inventory
-			for k,v := range host.Params {
+			for k, v := range host.Params {
 				host.Vars[k] = v
 			}
 		}
@@ -111,7 +114,7 @@ func (s SequentialExecuter) Execute(playbook *ansible.Playbook, inventory *ansib
 			for _, task := range play.Tasks {
 				// Handle conditional task execution 'when'
 				if task.When != "" {
-					result, err  := templating.Assert(task.When, host.Vars)
+					result, err := templating.Assert(task.When, host.Vars)
 					if err != nil {
 						return err
 					}
@@ -142,4 +145,3 @@ func (s SequentialExecuter) Execute(playbook *ansible.Playbook, inventory *ansib
 	}
 	return nil
 }
-
