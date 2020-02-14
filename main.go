@@ -3,14 +3,17 @@ package main
 import (
 	"ansiblego/pkg"
 	"ansiblego/pkg/logging"
+	"ansiblego/testing/benchmark"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"path"
 )
 
 var inventoryPath = flag.String("i", "", "Path to inventory")
 var verbosity = flag.Int("v", 0, "Verbosity")
+var benchmarkTest = flag.Bool("b", false, "Benchmark test")
 
 func run() error {
 	flag.Parse()
@@ -36,13 +39,40 @@ func run() error {
 	return nil
 }
 
+func runBenchmark() {
+	log.Printf("Benchmark START")
+
+	errGosible := benchmark.RunGosible(&benchmark.BenchmarkConfig{
+		PlaybookName: "test_echos_10.yaml",
+		ExpectedMaxDurationSec: 2,
+		Verbose: false})
+	if errGosible != nil {
+		panic(errGosible)
+	}
+
+	errAnsible := benchmark.RunAnsible(&benchmark.BenchmarkConfig{
+		PlaybookName: "test_echos_10.yaml",
+		ExpectedMaxDurationSec: 10,
+		Verbose: false,
+	})
+	if errAnsible != nil {
+		panic(errAnsible)
+	}
+
+	log.Printf("Benchmark DONE")
+}
 //
 // Usage: ansiblego -i inventory site.yml
 //
 func main() {
-	err := run()
-	if err != nil {
-		logging.Info(err.Error())
-		os.Exit(1)
+	flag.Parse()
+	if *benchmarkTest {
+		runBenchmark()
+	} else {
+		err := run()
+		if err != nil {
+			logging.Info(err.Error())
+			os.Exit(1)
+		}
 	}
 }

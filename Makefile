@@ -12,6 +12,6 @@ test-integration:
 
 test-benchmark:
 	# Run ansiblego benchmark test
-	go test -v --count=1 --tags benchmark ./testing/benchmark/...
+	go run main.go -b
 
 test-all: test test-integration

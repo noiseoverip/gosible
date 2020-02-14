@@ -1,43 +1,73 @@
-package basic
+package benchmark
 
 import (
 	"ansiblego/pkg"
-	"github.com/stretchr/testify/assert"
+	"ansiblego/pkg/logging"
+	"log"
 	"os"
 	"os/exec"
 	"path"
-	"testing"
+	"strings"
 	"time"
 )
 
 type BenchmarkConfig struct {
 	PlaybookName string
+	ExpectedMaxDurationSec int64
+	Verbose bool
 }
 
-func RunGosible(t *testing.T, config *BenchmarkConfig) {
-	start := time.Now().Nanosecond()
-	wd, _ := os.Getwd()
+func RunGosible(config *BenchmarkConfig) error {
+	if !config.Verbose {
+		// Disable gosible logging, leave only error logs
+		logging.L = logging.NewGosibleSilentLogger()
+	}
 	r := pkg.Runner{
 		Context: &pkg.Context{
-			InventoryFilePath: path.Join(wd, "files", "hosts"),
-			PlaybookFilePath:  path.Join(wd, "files", config.PlaybookName),
+			InventoryFilePath: path.Join(resourcePath(), "hosts"),
+			PlaybookFilePath:  path.Join(resourcePath(), config.PlaybookName),
 		},
 		Strategy: &pkg.SequentialExecuter{},
 	}
+	start := time.Now().Unix()
 	err := r.Run()
-	assert.NoError(t, err)
-	t.Logf("Duration %d", time.Now().Nanosecond()-start)
+	if err != nil {
+		return err
+	}
+	duration := time.Now().Unix()-start
+	log.Printf("gosible %s: %d seconds", config.PlaybookName, duration)
+	if duration > config.ExpectedMaxDurationSec {
+		log.Fatalf("\t Expected was: %d", config.ExpectedMaxDurationSec)
+	}
+	return nil
 }
 
-func RunAnsible(t *testing.T, config *BenchmarkConfig) {
-	wd, _ := os.Getwd()
-	hostsPath := path.Join(wd, "files", "hosts")
-	playbookPath := path.Join(wd, "files", config.PlaybookName)
-	cmd := exec.Command("ansible-playbook", "-i", hostsPath, playbookPath)
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-	if err := cmd.Run(); err != nil {
-		t.Errorf("%v", err)
-		t.Fatalf("Failed")
+func RunAnsible(config *BenchmarkConfig) error {
+	playbookPath := path.Join(resourcePath(), config.PlaybookName)
+	cmd := exec.Command("ansible-playbook", "-i", path.Join(resourcePath(), "hosts"), playbookPath)
+	if config.Verbose {
+		log.Printf("\t %s %s", cmd.Path, strings.Join(cmd.Args, " ") )
 	}
+	cmd.Stderr = os.Stderr
+	if config.Verbose {
+		cmd.Stdout = os.Stdout
+	}
+	start := time.Now().Unix()
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	duration := time.Now().Unix()-start
+	log.Printf("ansible %s: %d seconds", config.PlaybookName, duration)
+	if duration > config.ExpectedMaxDurationSec {
+		log.Fatalf("\t Expected was: %d", config.ExpectedMaxDurationSec)
+	}
+	return nil
+}
+
+func resourcePath() string {
+	wd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	return path.Join(wd, "testing", "benchmark", "files")
 }

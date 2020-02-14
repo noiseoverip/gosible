@@ -1,6 +1,6 @@
 // +build integration
 
-package basic_test
+package integration
 
 import (
 	"ansiblego/pkg"

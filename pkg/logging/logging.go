@@ -91,3 +91,7 @@ func NewGosibleLogger(
 func NewGosibleDefaultLogger() *GosibleLogger {
 	return NewGosibleLogger(ioutil.Discard, ioutil.Discard, os.Stdout, os.Stdout, os.Stdout, os.Stdout)
 }
+
+func NewGosibleSilentLogger() *GosibleLogger {
+	return NewGosibleLogger(ioutil.Discard, ioutil.Discard, ioutil.Discard, ioutil.Discard, ioutil.Discard, os.Stdout)
+}

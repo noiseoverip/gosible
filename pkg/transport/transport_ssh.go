@@ -8,7 +8,6 @@ import (
 	"github.com/bramvdbogaerde/go-scp/auth"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
-	"log"
 	"net"
 	"os"
 	"strings"
@@ -108,7 +107,7 @@ func (t *SSHTransport) createSSHClient(loginName string, hostIpAddress string, p
 	}
 	nodeAddr := fmt.Sprintf("%s:22", hostIpAddress)
 
-	log.Printf("Opening SSH connection to %s@%s", loginName, nodeAddr)
+	logging.Info("Opening SSH connection to %s@%s", loginName, nodeAddr)
 	return ssh.Dial("tcp", nodeAddr, sshConfig)
 
 	//modes := ssh.TerminalModes{
