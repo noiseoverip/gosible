@@ -2,7 +2,6 @@ package main
 
 import (
 	"ansiblego/pkg"
-	"ansiblego/pkg/logging"
 	"ansiblego/testing/benchmark"
 	"flag"
 	"fmt"
@@ -11,22 +10,13 @@ import (
 	"path"
 )
 
-var inventoryPath = flag.String("i", "", "Path to inventory")
-var verbosity = flag.Int("v", 0, "Verbosity")
-var benchmarkTest = flag.Bool("b", false, "Benchmark test")
 
-func run() error {
-	flag.Parse()
-	if len(flag.Args()) < 1 {
-		return fmt.Errorf("too few arguments provided, please provide path to playbook") //TODO: show to print to stderr
-	}
-
-	playbookPath := flag.Arg(0)
+func runPlaybook(inventory string, playbook string) error {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-	r := pkg.NewRunner(path.Join(cwd, *inventoryPath), path.Join(cwd, playbookPath))
+	r := pkg.NewRunner(path.Join(cwd, inventory), path.Join(cwd, playbook))
 	err = r.Run()
 	if err != nil {
 		return fmt.Errorf("runner error: %v", err)
@@ -34,41 +24,89 @@ func run() error {
 	return nil
 }
 
-func runBenchmark() {
+//
+// Usage: ansiblego -i inventory site.yml
+//
+func main() {
+	// Playbook CLI interface
+	playbookCommand := flag.NewFlagSet("playbook", flag.ExitOnError)
+	inventoryPath := playbookCommand.String("i", "", "Path to inventory")
+	playbookCommand.Usage = func() {
+		fmt.Println("Usage: playbook [options] playbook.yml")
+		playbookCommand.PrintDefaults()
+	}
+
+	// Benchmark CLI interface
+	benchmarkCommand := flag.NewFlagSet("benchmark", flag.ExitOnError)
+	bVerbosity := benchmarkCommand.Int("v", 0, "Verbosity level")
+
+	var usage = func() {
+		fmt.Println("gosible [command]")
+		fmt.Println()
+		fmt.Println("Commands:")
+		fmt.Println("\tplaybook - run ansible playbook")
+		fmt.Println("\tbenchmark - run benchmark to compare gosible vs ansible. Currently only works from inside source repo")
+	}
+
+	if len(os.Args) == 1 {
+		usage()
+	}
+
+	switch os.Args[1] {
+	case "playbook":
+		playbookCommand.Parse(os.Args[2:])
+	case "benchmark":
+		benchmarkCommand.Parse(os.Args[2:])
+	case "help":
+		fallthrough
+	case "--help":
+		usage()
+	default:
+		fmt.Printf("Invalid subcommand %s.\n", os.Args[1])
+	}
+
+	if playbookCommand.Parsed() {
+		if playbookCommand.NArg() < 1 {
+			fmt.Println("Error: Last argument should be path to playbook")
+			fmt.Println()
+			playbookCommand.Usage()
+			os.Exit(1)
+		}
+		if *inventoryPath == "" {
+			fmt.Println("Error: path to inventory must be provided")
+			fmt.Println()
+			playbookCommand.Usage()
+			os.Exit(1)
+		}
+
+		if err := runPlaybook(*inventoryPath, playbookCommand.Arg(0)); err != nil {
+			fmt.Printf("Failure during playbook execution: %s", err)
+			os.Exit(1)
+		}
+	}
+
+	if benchmarkCommand.Parsed() {
+		if err := runBenchmark(*bVerbosity); err != nil {
+			fmt.Print(err)
+			os.Exit(1)
+		}
+	}
+}
+
+func runBenchmark(verbosity int) error {
 	log.Printf("Benchmark START")
 
 	errGosible := benchmark.RunGosible(&benchmark.BenchmarkConfig{
 		PlaybookName:           "test_echos_10.yaml",
 		ExpectedMaxDurationSec: 2,
-		Verbose:                *verbosity})
+		Verbose:                verbosity})
 	if errGosible != nil {
 		panic(errGosible)
 	}
 
-	errAnsible := benchmark.RunAnsible(&benchmark.BenchmarkConfig{
+	return benchmark.RunAnsible(&benchmark.BenchmarkConfig{
 		PlaybookName:           "test_echos_10.yaml",
 		ExpectedMaxDurationSec: 10,
-		Verbose:                *verbosity,
+		Verbose:                verbosity,
 	})
-	if errAnsible != nil {
-		panic(errAnsible)
-	}
-
-	log.Printf("Benchmark DONE")
-}
-
-//
-// Usage: ansiblego -i inventory site.yml
-//
-func main() {
-	flag.Parse()
-	if *benchmarkTest {
-		runBenchmark()
-	} else {
-		err := run()
-		if err != nil {
-			logging.Info(err.Error())
-			os.Exit(1)
-		}
-	}
 }
