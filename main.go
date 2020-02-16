@@ -28,6 +28,8 @@ func runPlaybook(inventory string, playbook string) error {
 // Usage: ansiblego -i inventory site.yml
 //
 func main() {
+	log.Println()
+
 	// Playbook CLI interface
 	playbookCommand := flag.NewFlagSet("playbook", flag.ExitOnError)
 	inventoryPath := playbookCommand.String("i", "", "Path to inventory")

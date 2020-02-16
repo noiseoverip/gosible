@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -27,11 +28,11 @@ type GosibleLogger struct {
 }
 
 func Info(format string, v ...interface{}) {
-	L.InfoLogger.Printf(format, v...)
+	L.InfoLogger.Output(2, fmt.Sprintf(format, v...))
 }
 
 func Debug(format string, v ...interface{}) {
-	L.VerboseLogger.Printf(format, v...)
+	L.VerboseLogger.Output(2, fmt.Sprintf(format, v...))
 }
 
 func (g *GosibleLogger) SetLevel(level int) {
@@ -44,12 +45,12 @@ func (g *GosibleLogger) Info(msg interface{}) {
 
 func (g *GosibleLogger) Verbose(format string, v ...interface{}) {
 	if g.Level > 0 {
-		g.VerboseLogger.Printf(format, v...)
+		g.VerboseLogger.Output(2, fmt.Sprintf(format, v...))
 	}
 }
 
-func (g *GosibleLogger) Warn(msg interface{}) {
-	g.WarningLogger.Print(msg)
+func (g *GosibleLogger) Warn(format string, v ...interface{}) {
+	g.WarningLogger.Output(2, fmt.Sprintf(format, v...))
 }
 
 func NewGosibleLogger(
