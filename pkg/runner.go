@@ -44,14 +44,14 @@ func (r *Runner) Run() error {
 		return fmt.Errorf("failed to load inventory from path %s: %v", r.Context.InventoryFilePath, err)
 	}
 
-	logging.Info("\n# INVENTORY:\n")
+	logging.Debug("\n# INVENTORY:\n")
 	for _, g := range inventory.Groups {
-		logging.Info("\tGroup: %s\n", g.Name)
+		logging.Debug("\tGroup: %s\n", g.Name)
 		for _, h := range g.Hosts {
-			logging.Info("\t\tHost: %s %s\n", h.Name, h.IpAddr)
+			logging.Debug("\t\tHost: %s %s\n", h.Name, h.IpAddr)
 		}
 	}
-	logging.Info("\n")
+	logging.Debug("\n")
 
 	groupVars, err := ansible.LoadGroupVars(path.Dir(r.Context.InventoryFilePath))
 	if err != nil {
@@ -82,8 +82,7 @@ type SequentialExecuter struct {
 
 func (s SequentialExecuter) Execute(playbook *ansible.Playbook, inventory *ansible.Inventory, vars ansible.GroupVariables) error {
 	for _, play := range playbook.Plays {
-		logging.L.InfoLogger.Printf("\n### Running play [%s] ###\n\n", play.HostSelector)
-
+		logging.Display("PLAY [%s]", play.HostSelector)
 		hosts, err := inventory.GetHosts(play.HostSelector)
 		if err != nil {
 			return err
@@ -124,13 +123,16 @@ func (s SequentialExecuter) Execute(playbook *ansible.Playbook, inventory *ansib
 					}
 				}
 
-				logging.Debug("\n### Running task [%s] on host %s\n", task.Name, host)
+				logging.Display("TASK [%s]", task.Name)
 				if host.Transport == nil {
 					host.Transport = transport.CreateSSHTransport(host.Params)
 				}
 				r := task.Module.Run(host.Transport, host.Vars)
 				logging.Debug("Module exec: %s", r)
-				if !r.Result {
+				if r.Result {
+					logging.Info("ok: [%s]", host.Name)
+				} else {
+					logging.Info("failed: [%s]", host.Name)
 					return fmt.Errorf("module execution failed")
 				}
 				// register module output as variable

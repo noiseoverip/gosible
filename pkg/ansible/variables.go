@@ -35,7 +35,7 @@ func LoadGroupVars(dir string) (groupVars GroupVariables, err error) {
 	// Assemble a list of tier variable files
 	err = filepath.Walk(root, func(filePath string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
-			logging.Info("Loading group vars from: %s\n", filePath)
+			logging.Debug("Loading group vars from: %s\n", filePath)
 			group := path.Base(path.Dir(filePath))
 
 			var variables = make(map[string]interface{})

@@ -2,33 +2,37 @@ package logging
 
 import (
 	"fmt"
+	"golang.org/x/crypto/ssh/terminal"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 )
 
 var L = NewGosibleDefaultLogger()
 
 type GosibleLogger struct {
-	// WireLogger is a handle for most verbose logging
 	WireLogger *log.Logger
-	// TraceLogger is a handle for trace logging
 	TraceLogger *log.Logger
-	// InfoLogger is a handle for info level logging
 	InfoLogger *log.Logger
-	// VerboseLogger is a handle for info level logging
 	VerboseLogger *log.Logger
-	// WarningLogger is a handle for warning level logging
 	WarningLogger *log.Logger
-	// ErrorLogger is a handle for error logging
 	ErrorLogger *log.Logger
-
 	Level int
 }
 
 func Info(format string, v ...interface{}) {
 	L.InfoLogger.Output(2, fmt.Sprintf(format, v...))
+}
+
+func Display(format string, v ...interface{}) {
+	width, _, _ := terminal.GetSize(int(os.Stdin.Fd()))
+	if width < 1 {
+		width = 768
+	}
+	msg := fmt.Sprintf(format, v...)
+	Info("\n%s %s", msg, strings.Repeat("*", width - len(msg) - 1))
 }
 
 func Debug(format string, v ...interface{}) {
@@ -67,8 +71,7 @@ func NewGosibleLogger(
 		log.Ldate|log.Ltime|log.Lshortfile)
 
 	l.InfoLogger = log.New(infoHandle,
-		"INFO: ",
-		log.Ldate|log.Ltime|log.Lshortfile)
+		"", 0)
 
 	l.SetVerbose(verboseHandle)
 
