@@ -97,7 +97,7 @@ func runBenchmark(verbosity int) error {
 
 	errGosible := benchmark.RunGosible(&benchmark.BenchmarkConfig{
 		PlaybookName:           "test_echos_10.yaml",
-		ExpectedMaxDurationSec: 2,
+		ExpectedMaxDurationSec: 4,
 		Verbose:                verbosity})
 	if errGosible != nil {
 		panic(errGosible)
@@ -105,7 +105,7 @@ func runBenchmark(verbosity int) error {
 
 	return benchmark.RunAnsible(&benchmark.BenchmarkConfig{
 		PlaybookName:           "test_echos_10.yaml",
-		ExpectedMaxDurationSec: 10,
+		ExpectedMaxDurationSec: 13,
 		Verbose:                verbosity,
 	})
 }

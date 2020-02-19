@@ -12,6 +12,6 @@ test-integration:
 
 test-benchmark:
 	# Run ansiblego benchmark test
-	go run main.go -b
+	go run main.go benchmark
 
 test-all: test test-integration

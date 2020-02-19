@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"sync"
+	"time"
 )
 
 type Executer interface {
@@ -30,7 +32,7 @@ type Runner struct {
 func NewRunner(inventory string, playbook string) *Runner {
 	return &Runner{
 		Context:  &Context{InventoryFilePath: inventory, PlaybookFilePath: playbook},
-		Strategy: NewSequentialExecuter(),
+		Strategy: NewParalelExecutor(),
 	}
 }
 
@@ -114,7 +116,6 @@ func (s SequentialExecuter) Execute(playbook *ansible.Playbook, inventory *ansib
 			}
 		}
 
-
 		for _, task := range play.Tasks {
 			logging.Display("TASK [%s]", task.Name)
 			for _, host := range hosts {
@@ -134,6 +135,7 @@ func (s SequentialExecuter) Execute(playbook *ansible.Playbook, inventory *ansib
 				}
 				r := task.Module.Run(context, host.Transport, host.Vars)
 				logging.Debug("Module exec: %s", r)
+
 				if r.Result {
 					logging.Info("ok: [%s]", host.Name)
 				} else {
@@ -146,6 +148,110 @@ func (s SequentialExecuter) Execute(playbook *ansible.Playbook, inventory *ansib
 					// execution time, module name...
 					host.Vars[task.Register] = r
 				}
+			}
+		}
+	}
+	return nil
+}
+
+
+type ParalelExecutor struct {
+
+}
+
+func NewParalelExecutor() *ParalelExecutor {
+	return &ParalelExecutor{}
+}
+
+func(p *ParalelExecutor) Execute(playbook *ansible.Playbook, inventory *ansible.Inventory, vars ansible.GroupVariables) error {
+	context := modules.Context{
+		PlaybookDir:  playbook.Dir,
+		InventoryDir: inventory.Dir,
+	}
+
+	for _, play := range playbook.Plays {
+		logging.Display("PLAY [%s]", play.HostSelector)
+		hosts, err := inventory.GetHosts(play.HostSelector)
+		if err != nil {
+			return err
+		}
+
+		// TODO: the way it is done now, host variable will not persist across plays
+		// Build initial host variables by looping though groups it belongs to add variables of that group
+		// Precedence:
+		// -- group vars (ordered alphabetically )
+		// -- host params (from inventory)
+		// -- TODO: cli
+		for _, host := range hosts {
+			for _, group := range host.Groups {
+				if vars, found := vars[group]; found {
+					host.Vars.Add(vars)
+				}
+			}
+			// Override group variables with host params from inventory
+			for k, v := range host.Params {
+				host.Vars[k] = v
+			}
+		}
+
+		for _, task := range play.Tasks {
+			logging.Display("TASK [%s]", task.Name)
+
+			errors := make(chan error, len(hosts))
+			var wg sync.WaitGroup
+			for _, host := range hosts {
+				// Handle conditional task execution 'when'
+				if task.When != "" {
+					result, err := templating.Assert(task.When, host.Vars)
+					if err != nil {
+						return err
+					}
+					if !result {
+						logging.Info("skipped: [%s]", host.Name)
+						continue
+					}
+				}
+				if host.Transport == nil {
+					host.Transport = transport.CreateSSHTransport(host.Params)
+				}
+				wg.Add(1)
+				go func(host *ansible.Host) {
+					defer wg.Done()
+					r := task.Module.Run(context, host.Transport, host.Vars)
+					logging.Debug("Module exec: %s", r)
+
+					if r.Result {
+						logging.Info("ok: [%s]", host.Name)
+					} else {
+						logging.Info("failed: [%s]", host.Name)
+						errors <- fmt.Errorf("module execution failed: %s", r.String())
+					}
+					// register module output as variable
+					if task.Register != "" {
+						// TODO: module execusion result should probably be wrapped to add extra information such as
+						// execution time, module name...
+						host.Vars[task.Register] = r
+					}
+				}(host)
+			}
+			close(errors)
+
+			wgHostsDone := make(chan struct{})
+			go func() {
+				defer close(wgHostsDone)
+				wg.Wait()
+			}()
+
+			select {
+			case <-wgHostsDone:
+				// do nothing
+				logging.Debug("All host finished")
+			case <-time.After(1 * time.Minute):
+				return fmt.Errorf("timed out waiting for ansible-inventory runs")
+			}
+
+			for err := range errors {
+				logging.Error("%s", err)
 			}
 		}
 	}

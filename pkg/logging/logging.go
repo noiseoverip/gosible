@@ -26,6 +26,10 @@ func Info(format string, v ...interface{}) {
 	Global.InfoLogger.Output(2, fmt.Sprintf(format, v...))
 }
 
+func Error(format string, v ...interface{}) {
+	Global.InfoLogger.Output(2, "ERROR: " + fmt.Sprintf(format, v...))
+}
+
 func Display(format string, v ...interface{}) {
 	width, _, _ := terminal.GetSize(int(os.Stdin.Fd()))
 	if width < 1 {
