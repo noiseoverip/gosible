@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
+	"path"
 )
 
 // Command implements module interface and executes CLI commands on transport layer
@@ -26,7 +27,7 @@ func NewTemplate(args map[string]string) Module {
 	return &Template{Src: args["src"], Dest:  args["dest"]}
 }
 
-func(t *Template) Run(transport transport.Transport, vars map[string]interface{}) *ModuleExecResult {
+func(t *Template) Run(ctx Context, transport transport.Transport, vars map[string]interface{}) *ModuleExecResult {
 	// Render source file path
 	sourcePath, err := templating.TemplateExec(t.Src, vars)
 	if err != nil {
@@ -34,6 +35,8 @@ func(t *Template) Run(transport transport.Transport, vars map[string]interface{}
 	}
 
 	// Search for template in playbook dir. Should be extended once we add support for roles
+	sourcePath = path.Join(ctx.PlaybookDir, sourcePath)
+	logging.Debug("Loading template from %s", sourcePath)
 	templateSrcFile, err := os.Open(sourcePath)
 	if err != nil {
 		return ErrorModuleConfig("failed to load template file: %v", err)
@@ -43,7 +46,6 @@ func(t *Template) Run(transport transport.Transport, vars map[string]interface{}
 	if bytesRead < 1 {
 		logging.Info("WARN: template %s looks empty", sourcePath)
 	}
-
 
 	// Render it
 	templateRendered, err := templating.TemplateExec(string(buf.Bytes()), vars)
@@ -56,7 +58,7 @@ func(t *Template) Run(transport transport.Transport, vars map[string]interface{}
 	if err != nil {
 		return ErrorModuleConfig("failed to determine template destination path: %v", err)
 	}
-	logging.Info("\nTemplate:\n" +
+	logging.Debug("\nTemplate:\n" +
 		"\t\tsource: %s\n" +
 		"\t\tdest: %s\n" +
 		"\t\traw:\n" +
@@ -76,7 +78,7 @@ func(t *Template) Run(transport transport.Transport, vars map[string]interface{}
 		logging.Info("WARN: 0 bytes written for template")
 		return &ModuleExecResult{ Result: false, StdOut: "", StdErr: ""}
 	}
-	logging.Info("Saved template to %s\n", tempFile.Name())
+	logging.Debug("Saved template to %s\n", tempFile.Name())
 
 	err = transport.SendFileToRemote(tempFile.Name(), destinationPath, "0600")
 	if err != nil {

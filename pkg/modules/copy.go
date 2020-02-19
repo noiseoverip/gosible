@@ -3,6 +3,7 @@ package modules
 import (
 	"ansiblego/pkg/templating"
 	"ansiblego/pkg/transport"
+	"path"
 )
 
 type Copy struct {
@@ -28,12 +29,13 @@ func LoadCopy(args map[string]string) Module {
 	return module
 }
 
-func(m *Copy) Run(transport transport.Transport, vars map[string]interface{}) *ModuleExecResult {
+func(m *Copy) Run(ctx Context, transport transport.Transport, vars map[string]interface{}) *ModuleExecResult {
 	// Render source file path
 	sourcePath, err := templating.TemplateExec(m.Src, vars)
 	if err != nil {
 		return ErrorModuleConfig("failed to determine source path: %v", err)
 	}
+	sourcePath = path.Join(ctx.PlaybookDir, sourcePath)
 	// Render destination path
 	destinationPath, err := templating.TemplateExec(m.Dest, vars)
 	if err != nil {

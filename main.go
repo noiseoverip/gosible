@@ -2,6 +2,7 @@ package main
 
 import (
 	"ansiblego/pkg"
+	"ansiblego/pkg/logging"
 	"ansiblego/testing/benchmark"
 	"flag"
 	"fmt"
@@ -17,22 +18,14 @@ func runPlaybook(inventory string, playbook string) error {
 		return err
 	}
 	r := pkg.NewRunner(path.Join(cwd, inventory), path.Join(cwd, playbook))
-	err = r.Run()
-	if err != nil {
-		return fmt.Errorf("runner error: %v", err)
-	}
-	return nil
+	return r.Run()
 }
 
-//
-// Usage: ansiblego -i inventory site.yml
-//
 func main() {
-	log.Println()
-
 	// Playbook CLI interface
 	playbookCommand := flag.NewFlagSet("playbook", flag.ExitOnError)
 	inventoryPath := playbookCommand.String("i", "", "Path to inventory")
+	pVerbosity := playbookCommand.Int("v", 0, "Verbosity level")
 	playbookCommand.Usage = func() {
 		fmt.Println("Usage: playbook [options] playbook.yml")
 		playbookCommand.PrintDefaults()
@@ -79,6 +72,10 @@ func main() {
 			fmt.Println()
 			playbookCommand.Usage()
 			os.Exit(1)
+		}
+
+		if *pVerbosity > 0 {
+			logging.Global = logging.NewGosibleVerboseLogger(*pVerbosity)
 		}
 
 		if err := runPlaybook(*inventoryPath, playbookCommand.Arg(0)); err != nil {

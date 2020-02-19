@@ -5,9 +5,14 @@ import (
 	"fmt"
 )
 
+type Context struct {
+	PlaybookDir string
+	InventoryDir string
+}
+
 // Module represents Ansible module interface
 type Module interface {
-	Run(transport transport.Transport, vars map[string]interface{}) *ModuleExecResult
+	Run(ctx Context, transport transport.Transport, vars map[string]interface{}) *ModuleExecResult
 }
 
 func ErrorModuleConfig(text string, args ...interface{}) *ModuleExecResult {

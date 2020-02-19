@@ -15,7 +15,7 @@ func LoadAssert(args map[string]string) Module {
 	return &Assert{That: args["that"], FailMsg: args["success_msg"], SuccessMsg: args["success_msg"]}
 }
 
-func(self *Assert) Run(transport transport.Transport, vars map[string]interface{}) *ModuleExecResult {
+func(self *Assert) Run(ctx Context, transport transport.Transport, vars map[string]interface{}) *ModuleExecResult {
 	// Since variable change during runtime, we have to render args at the point of execution
 	renderedCondition, err := templating.Assert(self.That, vars)
 	if err != nil {

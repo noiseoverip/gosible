@@ -3,6 +3,7 @@ package pkg
 import (
 	"ansiblego/pkg/ansible"
 	"ansiblego/pkg/logging"
+	"ansiblego/pkg/modules"
 	"ansiblego/pkg/templating"
 	"ansiblego/pkg/transport"
 	"fmt"
@@ -39,6 +40,7 @@ func (r *Runner) Run() error {
 		return fmt.Errorf("failed to open file %v", err)
 	}
 	inventory := &ansible.Inventory{}
+	inventory.Dir = path.Dir(r.Context.InventoryFilePath)
 	err = ansible.ReadInventory(inventoryFile, inventory)
 	if err != nil {
 		return fmt.Errorf("failed to load inventory from path %s: %v", r.Context.InventoryFilePath, err)
@@ -51,7 +53,6 @@ func (r *Runner) Run() error {
 			logging.Debug("\t\tHost: %s %s\n", h.Name, h.IpAddr)
 		}
 	}
-	logging.Debug("\n")
 
 	groupVars, err := ansible.LoadGroupVars(path.Dir(r.Context.InventoryFilePath))
 	if err != nil {
@@ -64,6 +65,7 @@ func (r *Runner) Run() error {
 	}
 
 	playbook := &ansible.Playbook{}
+	playbook.Dir = path.Dir(r.Context.PlaybookFilePath)
 	err = ansible.ReadPlaybook(playbookFile, playbook)
 	if err != nil {
 		return fmt.Errorf("failed to load playbook from path %s: %v", r.Context.PlaybookFilePath, err)
@@ -78,9 +80,15 @@ func NewSequentialExecuter() Executer {
 }
 
 type SequentialExecuter struct {
+
 }
 
 func (s SequentialExecuter) Execute(playbook *ansible.Playbook, inventory *ansible.Inventory, vars ansible.GroupVariables) error {
+	context := modules.Context{
+		PlaybookDir:  playbook.Dir,
+		InventoryDir: inventory.Dir,
+	}
+
 	for _, play := range playbook.Plays {
 		logging.Display("PLAY [%s]", play.HostSelector)
 		hosts, err := inventory.GetHosts(play.HostSelector)
@@ -106,11 +114,10 @@ func (s SequentialExecuter) Execute(playbook *ansible.Playbook, inventory *ansib
 			}
 		}
 
-		// Execute tasks on each host sequentially (for now)
-		for _, host := range hosts {
-			// Since role is just a list of tasks, we could simply expand it to tasks and attach role information to
-			// task (for tracking and logging mostly). Then task execution would not change.
-			for _, task := range play.Tasks {
+
+		for _, task := range play.Tasks {
+			logging.Display("TASK [%s]", task.Name)
+			for _, host := range hosts {
 				// Handle conditional task execution 'when'
 				if task.When != "" {
 					result, err := templating.Assert(task.When, host.Vars)
@@ -118,22 +125,20 @@ func (s SequentialExecuter) Execute(playbook *ansible.Playbook, inventory *ansib
 						return err
 					}
 					if !result {
-						logging.Debug("Skipping task [%s] on host %s\n", task.Name, host)
+						logging.Info("skipped: [%s]", host.Name)
 						continue
 					}
 				}
-
-				logging.Display("TASK [%s]", task.Name)
 				if host.Transport == nil {
 					host.Transport = transport.CreateSSHTransport(host.Params)
 				}
-				r := task.Module.Run(host.Transport, host.Vars)
+				r := task.Module.Run(context, host.Transport, host.Vars)
 				logging.Debug("Module exec: %s", r)
 				if r.Result {
 					logging.Info("ok: [%s]", host.Name)
 				} else {
 					logging.Info("failed: [%s]", host.Name)
-					return fmt.Errorf("module execution failed")
+					return fmt.Errorf("module execution failed: %s", r.String())
 				}
 				// register module output as variable
 				if task.Register != "" {
@@ -143,7 +148,6 @@ func (s SequentialExecuter) Execute(playbook *ansible.Playbook, inventory *ansib
 				}
 			}
 		}
-
 	}
 	return nil
 }

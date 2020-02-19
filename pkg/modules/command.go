@@ -17,7 +17,7 @@ func LoadCommand(args map[string]string) Module {
 	return &Command{Input: args["stdin"]}
 }
 
-func(c *Command) Run(transport transport.Transport, vars map[string]interface{}) *ModuleExecResult {
+func(c *Command) Run(ctx Context, transport transport.Transport, vars map[string]interface{}) *ModuleExecResult {
 	// Since variables change during runtime, we have to render args at the point of execution
 	renderedArgs, err := templating.TemplateExec(c.Input, vars)
 	if err != nil {

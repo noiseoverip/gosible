@@ -11,7 +11,7 @@
     - name: Echo var from group special 1
       command: "echo {{ from_group_special }}"
 
-    - name: Echo var from gorup special 2
+    - name: Echo var from group special 2
       command: "echo {{ from_group_special_second }}"
 
     - name: Should be skipped

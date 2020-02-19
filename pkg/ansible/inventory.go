@@ -13,6 +13,8 @@ type Inventory struct {
 	Groups []*HostGroup
 	// Inventory from host perspective
 	Hosts []*Host
+
+	Dir string
 }
 
 // Here we should interpret host selector and build a list of hosts we should run tasks play on

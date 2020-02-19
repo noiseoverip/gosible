@@ -27,11 +27,11 @@ type BenchmarkConfig struct {
 func RunGosible(config *BenchmarkConfig) error {
 	switch config.Verbose {
 	case LOGGING_DEFAULT:
-		logging.L = logging.NewGosibleSilentLogger()
+		logging.Global = logging.NewGosibleSilentLogger()
 	case LOGGING_BASIC:
-		logging.L = logging.NewGosibleDefaultLogger()
+		logging.Global = logging.NewGosibleDefaultLogger()
 	case LOGGING_VERBOSE:
-		logging.L.SetVerbose(os.Stdout)
+		logging.Global.SetVerbose(os.Stdout)
 	}
 
 	r := pkg.Runner{

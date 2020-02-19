@@ -28,7 +28,7 @@ func CreateSSHTransport(params map[string]string) Transport {
 
 // Exec executes command
 func (t *SSHTransport) Exec(command string, args ...string) (resultCode int, stdout string, stderr string, err error) {
-	logging.Info(">>> host:%s [%s %s]\n", t.HostAddress, command, strings.Join(args, " "))
+	logging.Debug(">>> host:%s [%s %s]\n", t.HostAddress, command, strings.Join(args, " "))
 	// TODO: re-use ssh sessions. Host should keep "connection" object, each command should run in its own session
 	if t.SSHClient == nil {
 		client, err := t.createSSHClient(t.Login, t.HostAddress, "/Users/salisauskas/.ssh/id_rsa")
@@ -107,7 +107,7 @@ func (t *SSHTransport) createSSHClient(loginName string, hostIpAddress string, p
 	}
 	nodeAddr := fmt.Sprintf("%s:22", hostIpAddress)
 
-	logging.Info("Opening SSH connection to %s@%s", loginName, nodeAddr)
+	logging.Debug("Opening SSH connection to %s@%s", loginName, nodeAddr)
 	return ssh.Dial("tcp", nodeAddr, sshConfig)
 
 	//modes := ssh.TerminalModes{

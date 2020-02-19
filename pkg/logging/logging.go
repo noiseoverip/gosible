@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-var L = NewGosibleDefaultLogger()
+var Global = NewGosibleDefaultLogger()
 
 type GosibleLogger struct {
 	WireLogger *log.Logger
@@ -23,7 +23,7 @@ type GosibleLogger struct {
 }
 
 func Info(format string, v ...interface{}) {
-	L.InfoLogger.Output(2, fmt.Sprintf(format, v...))
+	Global.InfoLogger.Output(2, fmt.Sprintf(format, v...))
 }
 
 func Display(format string, v ...interface{}) {
@@ -36,7 +36,7 @@ func Display(format string, v ...interface{}) {
 }
 
 func Debug(format string, v ...interface{}) {
-	L.VerboseLogger.Output(2, fmt.Sprintf(format, v...))
+	Global.VerboseLogger.Output(2, fmt.Sprintf(format, v...))
 }
 
 func (g *GosibleLogger) SetLevel(level int) {
@@ -102,4 +102,16 @@ func NewGosibleDefaultLogger() *GosibleLogger {
 
 func NewGosibleSilentLogger() *GosibleLogger {
 	return NewGosibleLogger(ioutil.Discard, ioutil.Discard, ioutil.Discard, ioutil.Discard, ioutil.Discard, os.Stdout)
+}
+
+func NewGosibleVerboseLogger(verbosity int) *GosibleLogger {
+	logger := NewGosibleDefaultLogger()
+
+	switch {
+	case verbosity > 1:
+		logger.VerboseLogger.SetOutput(os.Stdout)
+	case verbosity > 2:
+		logger.TraceLogger.SetOutput(os.Stdout)
+	}
+	return logger
 }
