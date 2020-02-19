@@ -251,7 +251,9 @@ func(p *ParalelExecutor) Execute(playbook *ansible.Playbook, inventory *ansible.
 			}
 
 			for err := range errors {
-				logging.Error("%s", err)
+				if err != nil {
+					logging.Error("%s", err)
+				}
 			}
 		}
 	}
