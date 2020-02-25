@@ -3,7 +3,7 @@ This is a list of Ansible features that are implemented in AnsibleGO
 
 * Read inventory group_vars
 * Read play yaml file
-* Template module - render jinj2 templates to target host
+* Template module - render jinja2 templates to target host
 * Command module - execute shell commands
 * Task attribute: register. Register task result as variable
 * Task attribute: when. Conditionally execute a task
