@@ -11,7 +11,6 @@ import (
 	"path"
 )
 
-
 func runPlaybook(inventory string, playbook string) error {
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -95,17 +94,22 @@ func main() {
 func runBenchmark(verbosity int) error {
 	log.Printf("Benchmark START")
 
-	errGosible := benchmark.RunGosible(&benchmark.BenchmarkConfig{
-		PlaybookName:           "test_echos_10.yaml",
-		ExpectedMaxDurationSec: 4,
-		Verbose:                verbosity})
-	if errGosible != nil {
-		panic(errGosible)
+	tests := []*benchmark.BenchmarkConfig{
+		{PlaybookName: "test_echos_10.yaml", ExpectedMaxDurationSec: 20, Verbose: verbosity},
+		{PlaybookName: "test_echos_100.yaml", ExpectedMaxDurationSec: 20, Verbose: verbosity},
+		{PlaybookName: "test_templates_10.yaml", ExpectedMaxDurationSec: 40, Verbose: verbosity},
 	}
 
-	return benchmark.RunAnsible(&benchmark.BenchmarkConfig{
-		PlaybookName:           "test_echos_10.yaml",
-		ExpectedMaxDurationSec: 13,
-		Verbose:                verbosity,
-	})
+	for _, tool := range []func(c *benchmark.BenchmarkConfig) error{
+		benchmark.RunGosible,
+		benchmark.RunAnsible,
+	} {
+		for _, tt := range tests {
+			err := tool(tt)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+	return nil
 }

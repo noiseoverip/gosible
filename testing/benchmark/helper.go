@@ -14,14 +14,14 @@ import (
 
 const (
 	LOGGING_DEFAULT = iota // logs only from benchmark tool and errors from gosible/ansible
-	LOGGING_BASIC	// normal logging from gosible/ansible
-	LOGGING_VERBOSE // verbose logging from gosible/ansible
-	)
+	LOGGING_BASIC          // normal logging from gosible/ansible
+	LOGGING_VERBOSE        // verbose logging from gosible/ansible
+)
 
 type BenchmarkConfig struct {
-	PlaybookName string
+	PlaybookName           string
 	ExpectedMaxDurationSec int64
-	Verbose int
+	Verbose                int
 }
 
 func RunGosible(config *BenchmarkConfig) error {
@@ -46,7 +46,7 @@ func RunGosible(config *BenchmarkConfig) error {
 	if err != nil {
 		return err
 	}
-	duration := time.Now().Unix()-start
+	duration := time.Now().Unix() - start
 	log.Printf("gosible %s: %d seconds", config.PlaybookName, duration)
 	if duration > config.ExpectedMaxDurationSec {
 		log.Fatalf("\t Expected was: %d", config.ExpectedMaxDurationSec)
@@ -55,14 +55,14 @@ func RunGosible(config *BenchmarkConfig) error {
 }
 
 func RunAnsible(config *BenchmarkConfig) error {
-	os.Chdir(resourcePath())
-	cmd := exec.Command("ansible-playbook", "-i",  "hosts")
+	cmd := exec.Command("ansible-playbook", "-i", "hosts")
+	cmd.Dir = resourcePath()
 	ansibleVerbosity := 0
 	if config.Verbose >= LOGGING_DEFAULT {
 		cmd.Stderr = os.Stderr
 	}
 	if config.Verbose > LOGGING_DEFAULT {
-		log.Printf("\t %s %s", cmd.Path, strings.Join(cmd.Args, " ") )
+		log.Printf("\t %s %s", cmd.Path, strings.Join(cmd.Args, " "))
 		cmd.Stdout = os.Stdout
 	}
 	if config.Verbose >= LOGGING_VERBOSE {
@@ -78,7 +78,7 @@ func RunAnsible(config *BenchmarkConfig) error {
 	if err := cmd.Run(); err != nil {
 		return err
 	}
-	duration := time.Now().Unix()-start
+	duration := time.Now().Unix() - start
 	log.Printf("ansible %s: %d seconds", config.PlaybookName, duration)
 	if duration > config.ExpectedMaxDurationSec {
 		log.Fatalf("\t Expected was: %d", config.ExpectedMaxDurationSec)

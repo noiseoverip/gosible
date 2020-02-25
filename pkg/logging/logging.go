@@ -13,13 +13,13 @@ import (
 var Global = NewGosibleDefaultLogger()
 
 type GosibleLogger struct {
-	WireLogger *log.Logger
-	TraceLogger *log.Logger
-	InfoLogger *log.Logger
+	WireLogger    *log.Logger
+	TraceLogger   *log.Logger
+	InfoLogger    *log.Logger
 	VerboseLogger *log.Logger
 	WarningLogger *log.Logger
-	ErrorLogger *log.Logger
-	Level int
+	ErrorLogger   *log.Logger
+	Level         int
 }
 
 func Info(format string, v ...interface{}) {
@@ -27,16 +27,16 @@ func Info(format string, v ...interface{}) {
 }
 
 func Error(format string, v ...interface{}) {
-	Global.InfoLogger.Output(2, "ERROR: " + fmt.Sprintf(format, v...))
+	Global.InfoLogger.Output(2, "ERROR: "+fmt.Sprintf(format, v...))
 }
 
 func Display(format string, v ...interface{}) {
-	width, _, _ := terminal.GetSize(int(os.Stdin.Fd()))
+	width, _, _ := terminal.GetSize(int(os.Stdout.Fd()))
 	if width < 1 {
-		width = 768
+		width = 130
 	}
 	msg := fmt.Sprintf(format, v...)
-	Info("\n%s %s", msg, strings.Repeat("*", width - len(msg) - 1))
+	Info("\n%s %s", msg, strings.Repeat("*", width-len(msg)-1))
 }
 
 func Debug(format string, v ...interface{}) {
