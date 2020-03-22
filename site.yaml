@@ -3,3 +3,5 @@
   tasks:
     - name: Say HELLO
       command: echo "Hello World"
+    - name: Say HELLO
+      command: echo "Hello World"

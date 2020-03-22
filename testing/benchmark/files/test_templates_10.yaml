@@ -3,12 +3,3 @@
   tasks:
   - &id001
     template: {dest: /tmp/ansiblego_test_template, src: template_example.j2}
-  - *id001
-  - *id001
-  - *id001
-  - *id001
-  - *id001
-  - *id001
-  - *id001
-  - *id001
-  - *id001

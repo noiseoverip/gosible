@@ -8,6 +8,7 @@ import (
 
 type Task struct {
 	Name     string `yaml:"name"`
+	ModuleName string
 	Module   modules.Module
 	When     string		// raw 'when' attribute which controls if task will be executed or not
 	Register string	// variable name to register tasks result to
@@ -35,8 +36,10 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			}
 			t.Module = modules.LoadDebug(params)
 		case "command":
+			t.ModuleName = "command"
 			t.Module = modules.LoadCommand(map[string]string{ "stdin": value.(string) })
 		case "template":
+			t.ModuleName = "template"
 			params := map[string]string{}
 			err := mapstructure.Decode(value, &params)	// TODO: this might be slow, need to investigate
 			if err != nil {
@@ -44,6 +47,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			}
 			t.Module = modules.NewTemplate(params)
 		case "copy":
+			t.ModuleName = "copy"
 			params := map[string]string{}
 			err := mapstructure.Decode(value, &params)
 			if err != nil {
@@ -51,6 +55,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			}
 			t.Module = modules.LoadCopy(params)
 		case "assert":
+			t.ModuleName = "assert"
 			params := map[string]string{}
 			err := mapstructure.Decode(value, &params)
 			if err != nil {
@@ -58,6 +63,7 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			}
 			t.Module = modules.LoadAssert(params)
 		case "set_fact":
+			t.ModuleName = "set_fact"
 			params := map[string]interface{}{}
 			err := mapstructure.Decode(value, &params)
 			if err != nil {

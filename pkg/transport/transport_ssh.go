@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"path"
 	"strings"
 	"time"
 )
@@ -20,10 +21,15 @@ type SSHTransport struct {
 	Login       string
 	SSHClient   *ssh.Client
 	SCPClient   *scp.Client
+	KeyPath 	string
 }
 
 func CreateSSHTransport(params map[string]string) Transport {
-	return &SSHTransport{HostAddress: params["ansible_host"], Login: params["ansible_user"]}
+	return &SSHTransport{
+		HostAddress: params["ansible_host"],
+		Login: params["ansible_user"],
+		KeyPath: params["ansible_ssh_private_key"],
+	}
 }
 
 // Exec executes command
@@ -64,7 +70,7 @@ func (t *SSHTransport) scpClient(loginName string, hostIpAddress string, private
 func (t *SSHTransport) SendFileToRemote(srcFilePath string, destFilePath string, mode string) (err error) {
 	// TODO: re-use scp sessions.
 	if t.SCPClient == nil {
-		t.SCPClient, err = t.scpClient(t.Login, fmt.Sprintf("%s:22", t.HostAddress), "/Users/salisauskas/.ssh/id_rsa")
+		t.SCPClient, err = t.scpClient(t.Login, fmt.Sprintf("%s:22", t.HostAddress), t.KeyPath)
 		if err != nil {
 			return fmt.Errorf("failed to create session :%v ", err)
 		}
@@ -93,7 +99,15 @@ func (t *SSHTransport) sshClient() (*ssh.Client, error) {
 	if t.SSHClient != nil {
 		return t.SSHClient, nil
 	}
-	sshAuth, err := SSHAuthWithKey("/Users/salisauskas/.ssh/id_rsa")
+	if t.KeyPath == "" {
+		defaultKeypath, err := DefaultSSHKeyPath()
+		if err != nil {
+			return nil, err
+		}
+		t.KeyPath = defaultKeypath
+	}
+	logging.Debug("Using ssh key path: %s", t.KeyPath)
+	sshAuth, err := SSHAuthWithKey(t.KeyPath)
 	if err != nil {
 		return nil, err
 	}
@@ -163,4 +177,13 @@ func SSHAuthWithKey(file string) (ssh.AuthMethod, error) {
 		return nil, err
 	}
 	return ssh.PublicKeys(key), nil
+}
+
+func DefaultSSHKeyPath() (keyPath string, err error){
+	homeDirPath, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return path.Join(homeDirPath, ".ssh", "id_rsa"), nil
+
 }

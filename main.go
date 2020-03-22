@@ -77,6 +77,8 @@ func main() {
 			logging.Global = logging.NewGosibleVerboseLogger(*pVerbosity)
 		}
 
+		logging.Global = logging.NewGosibleVerboseLogger(*pVerbosity)
+
 		if err := runPlaybook(*inventoryPath, playbookCommand.Arg(0)); err != nil {
 			fmt.Printf("Failure during playbook execution: %s", err)
 			os.Exit(1)

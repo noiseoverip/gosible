@@ -1,7 +1,7 @@
-node-0 ansible_host=192.168.64.4 ansible_user=ubuntu
-node-1 ansible_host=192.168.64.4 ansible_user=ubuntu
-node-2 ansible_host=192.168.64.4 ansible_user=ubuntu
-node-3 ansible_host=192.168.64.4 ansible_user=ubuntu
+node-0 ansible_host=192.168.64.4 ansible_user=ubuntu ansible_ssh_private_key=/Users/salisauskas/.ssh/id_rsa
+node-1 ansible_host=192.168.64.4 ansible_user=ubuntu ansible_ssh_private_key=/Users/salisauskas/.ssh/id_rsa
+node-2 ansible_host=192.168.64.4 ansible_user=ubuntu ansible_ssh_private_key=/Users/salisauskas/.ssh/id_rsa
+node-3 ansible_host=192.168.64.4 ansible_user=ubuntu ansible_ssh_private_key=/Users/salisauskas/.ssh/id_rsa
 node-4 ansible_host=192.168.64.4 ansible_user=ubuntu
 
 [special]

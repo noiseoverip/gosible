@@ -176,25 +176,30 @@ func(p *ParalelExecutor) Execute(playbook *ansible.Playbook, inventory *ansible.
 			return err
 		}
 
-		// TODO: the way it is done now, host variable will not persist across plays
 		// Build initial host variables by looping though groups it belongs to add variables of that group
 		// Precedence:
 		// -- group vars (ordered alphabetically )
 		// -- host params (from inventory)
-		// -- TODO: cli
 		for _, host := range hosts {
-			for _, group := range host.Groups {
-				if vars, found := vars[group]; found {
-					host.Vars.Add(vars)
+			// If there we no variable, it means this is the first play for this host so we load for it variables
+			// from group_vars, inventory
+			if len(host.Vars) < 1 {
+				for _, group := range host.Groups {
+					if vars, found := vars[group]; found {
+						host.Vars.Add(vars)
+					}
 				}
-			}
-			// Override group variables with host params from inventory
-			for k, v := range host.Params {
-				host.Vars[k] = v
+				// Override group variables with host params from inventory
+				for k, v := range host.Params {
+					host.Vars[k] = v
+				}
 			}
 		}
 
 		for _, task := range play.Tasks {
+			if task.Name == "" {
+				task.Name = task.ModuleName
+			}
 			logging.Display("TASK [%s]", task.Name)
 
 			errors := make(chan error, len(hosts))
@@ -234,7 +239,6 @@ func(p *ParalelExecutor) Execute(playbook *ansible.Playbook, inventory *ansible.
 					}
 				}(host)
 			}
-			close(errors)
 
 			wgHostsDone := make(chan struct{})
 			go func() {
@@ -250,6 +254,7 @@ func(p *ParalelExecutor) Execute(playbook *ansible.Playbook, inventory *ansible.
 				return fmt.Errorf("timed out waiting for ansible-inventory runs")
 			}
 
+			close(errors)
 			for err := range errors {
 				if err != nil {
 					logging.Error("%s", err)
