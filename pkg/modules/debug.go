@@ -15,17 +15,16 @@ func LoadDebug(args map[string]interface{}) Module {
 	return &Debug{Var: args["var"].(string)}
 }
 
-func(d *Debug) Run(ctx Context, transport transport.Transport, vars map[string]interface{}) *ModuleExecResult {
+func (d *Debug) Run(_ Context, _ transport.Transport, vars map[string]interface{}) *ModuleExecResult {
 	value := "NULL"
 	if v, ok := vars[d.Var]; ok {
 		b, err := yaml.Marshal(v)
 		if err != nil {
 			logging.Debug("ERROR: %v", err)
-			return &ModuleExecResult{ Result: false }
+			return &ModuleExecResult{Result: false}
 		}
 		value = string(b)
 	}
-	logging.Debug(">> %s:\n%s\n>>\n", d.Var, value)
-	logging.Debug(">> %s:\n%s\n>>\n", d.Var, value)
-	return &ModuleExecResult{ Result: true }
+	logging.Info("\t %s %s", d.Var, value)
+	return &ModuleExecResult{Result: true}
 }
