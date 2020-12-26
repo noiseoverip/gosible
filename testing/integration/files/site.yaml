@@ -1,4 +1,7 @@
 ---
+##
+## This playbook tests all available modules and verifies that they produce desired results
+##
 - hosts: all
   gather_facts: false
   tasks:
