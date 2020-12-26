@@ -21,14 +21,14 @@ type SSHTransport struct {
 	Login       string
 	SSHClient   *ssh.Client
 	SCPClient   *scp.Client
-	KeyPath 	string
+	KeyPath     string
 }
 
 func CreateSSHTransport(params map[string]string) Transport {
 	return &SSHTransport{
 		HostAddress: params["ansible_host"],
-		Login: params["ansible_user"],
-		KeyPath: params["ansible_ssh_private_key"],
+		Login:       params["ansible_user"],
+		KeyPath:     params["ansible_ssh_private_key"],
 	}
 }
 
@@ -44,7 +44,9 @@ func (t *SSHTransport) Exec(command string, args ...string) (resultCode int, std
 	if err != nil {
 		return -1, "", "", fmt.Errorf("failed to create session: %s", err)
 	}
-	defer session.Close()
+	defer func() {
+		_ = session.Close()
+	}()
 
 	var berr bytes.Buffer
 	session.Stderr = &berr
@@ -55,10 +57,10 @@ func (t *SSHTransport) Exec(command string, args ...string) (resultCode int, std
 	err = session.Run(cmd)
 	if err != nil {
 		logging.Info("ERROR %v", err)
-		return -1, string(bout.Bytes()), string(berr.Bytes()), err
+		return -1, bout.String(), bout.String(), err
 	}
 
-	return 0, string(bout.Bytes()), "", nil
+	return 0, bout.String(), "", nil
 }
 
 func (t *SSHTransport) scpClient(loginName string, hostIpAddress string, privateKeyPath string) (session *scp.Client, err error) {
@@ -96,6 +98,7 @@ func (t *SSHTransport) SendFileToRemote(srcFilePath string, destFilePath string,
 }
 
 func (t *SSHTransport) sshClient() (*ssh.Client, error) {
+	logging.Debug("initing ssh client")
 	if t.SSHClient != nil {
 		return t.SSHClient, nil
 	}
@@ -179,7 +182,7 @@ func SSHAuthWithKey(file string) (ssh.AuthMethod, error) {
 	return ssh.PublicKeys(key), nil
 }
 
-func DefaultSSHKeyPath() (keyPath string, err error){
+func DefaultSSHKeyPath() (keyPath string, err error) {
 	homeDirPath, err := os.UserHomeDir()
 	if err != nil {
 		return "", err

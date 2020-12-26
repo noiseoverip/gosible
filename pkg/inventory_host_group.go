@@ -1,6 +1,6 @@
-package ansible
+package pkg
 
 type HostGroup struct {
 	Hosts []*Host
-	Name string
+	Name  string
 }

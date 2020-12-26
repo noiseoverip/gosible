@@ -1,4 +1,4 @@
-package ansible
+package pkg
 
 import (
 	"ansiblego/pkg/transport"

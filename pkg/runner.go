@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"ansiblego/pkg/ansible"
 	"ansiblego/pkg/logging"
 	"ansiblego/pkg/modules"
 	"ansiblego/pkg/templating"
@@ -14,7 +13,7 @@ import (
 )
 
 type Executer interface {
-	Execute(playbook *ansible.Playbook, inventory *ansible.Inventory, vars ansible.GroupVariables) error
+	Execute(playbook *Playbook, inventory *Inventory, vars GroupVariables) error
 }
 
 // Context holds shared objects
@@ -29,6 +28,28 @@ type Runner struct {
 	Strategy Executer
 }
 
+type HostRunSummary struct {
+	Executed int
+	Failed   int // failure happened on host
+	Errors   int // failure happened while attempting to run taks
+}
+
+type HostRunSummaries map[string]*HostRunSummary
+
+func (h HostRunSummaries) hasFails() bool {
+	for _, sumarry := range h {
+		if sumarry.Failed > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+type TaskResultWrap struct {
+	*modules.ModuleExecResult
+	Host *Host
+}
+
 func NewRunner(inventory string, playbook string) *Runner {
 	return &Runner{
 		Context:  &Context{InventoryFilePath: inventory, PlaybookFilePath: playbook},
@@ -41,9 +62,9 @@ func (r *Runner) Run() error {
 	if err != nil {
 		return fmt.Errorf("failed to open file %v", err)
 	}
-	inventory := &ansible.Inventory{}
+	inventory := &Inventory{}
 	inventory.Dir = path.Dir(r.Context.InventoryFilePath)
-	err = ansible.ReadInventory(inventoryFile, inventory)
+	err = ReadInventory(inventoryFile, inventory)
 	if err != nil {
 		return fmt.Errorf("failed to load inventory from path %s: %v", r.Context.InventoryFilePath, err)
 	}
@@ -56,7 +77,7 @@ func (r *Runner) Run() error {
 		}
 	}
 
-	groupVars, err := ansible.LoadGroupVars(path.Dir(r.Context.InventoryFilePath))
+	groupVars, err := LoadGroupVars(path.Dir(r.Context.InventoryFilePath))
 	if err != nil {
 		return fmt.Errorf("failed to load host group variables")
 	}
@@ -66,9 +87,9 @@ func (r *Runner) Run() error {
 		return fmt.Errorf("failed to read playbook from path %s: %v", r.Context.PlaybookFilePath, err)
 	}
 
-	playbook := &ansible.Playbook{}
+	playbook := &Playbook{}
 	playbook.Dir = path.Dir(r.Context.PlaybookFilePath)
-	err = ansible.ReadPlaybook(playbookFile, playbook)
+	err = ReadPlaybook(playbookFile, playbook)
 	if err != nil {
 		return fmt.Errorf("failed to load playbook from path %s: %v", r.Context.PlaybookFilePath, err)
 	}
@@ -77,100 +98,21 @@ func (r *Runner) Run() error {
 	return r.Strategy.Execute(playbook, inventory, groupVars)
 }
 
-func NewSequentialExecuter() Executer {
-	return &SequentialExecuter{}
-}
-
-type SequentialExecuter struct {
-
-}
-
-func (s SequentialExecuter) Execute(playbook *ansible.Playbook, inventory *ansible.Inventory, vars ansible.GroupVariables) error {
-	context := modules.Context{
-		PlaybookDir:  playbook.Dir,
-		InventoryDir: inventory.Dir,
-	}
-
-	for _, play := range playbook.Plays {
-		logging.Display("PLAY [%s]", play.HostSelector)
-		hosts, err := inventory.GetHosts(play.HostSelector)
-		if err != nil {
-			return err
-		}
-
-		// TODO: the way it is done now, host variable will not persist across plays
-		// Build initial host variables by looping though groups it belongs to add variables of that group
-		// Precedence:
-		// -- group vars (ordered alphabetically )
-		// -- host params (from inventory)
-		// -- TODO: cli
-		for _, host := range hosts {
-			for _, group := range host.Groups {
-				if vars, found := vars[group]; found {
-					host.Vars.Add(vars)
-				}
-			}
-			// Override group variables with host params from inventory
-			for k, v := range host.Params {
-				host.Vars[k] = v
-			}
-		}
-
-		for _, task := range play.Tasks {
-			logging.Display("TASK [%s]", task.Name)
-			for _, host := range hosts {
-				// Handle conditional task execution 'when'
-				if task.When != "" {
-					result, err := templating.Assert(task.When, host.Vars)
-					if err != nil {
-						return err
-					}
-					if !result {
-						logging.Info("skipped: [%s]", host.Name)
-						continue
-					}
-				}
-				if host.Transport == nil {
-					host.Transport = transport.CreateSSHTransport(host.Params)
-				}
-				r := task.Module.Run(context, host.Transport, host.Vars)
-				logging.Debug("Module exec: %s", r)
-
-				if r.Result {
-					logging.Info("ok: [%s]", host.Name)
-				} else {
-					logging.Info("failed: [%s]", host.Name)
-					return fmt.Errorf("module execution failed: %s", r.String())
-				}
-				// register module output as variable
-				if task.Register != "" {
-					// TODO: module execusion result should probably be wrapped to add extra information such as
-					// execution time, module name...
-					host.Vars[task.Register] = r
-				}
-			}
-		}
-	}
-	return nil
-}
-
-
-type ParalelExecutor struct {
-
-}
-
 func NewParalelExecutor() *ParalelExecutor {
 	return &ParalelExecutor{}
 }
 
-func(p *ParalelExecutor) Execute(playbook *ansible.Playbook, inventory *ansible.Inventory, vars ansible.GroupVariables) error {
+type ParalelExecutor struct{}
+
+func (p *ParalelExecutor) Execute(playbook *Playbook, inventory *Inventory, vars GroupVariables) error {
 	context := modules.Context{
 		PlaybookDir:  playbook.Dir,
 		InventoryDir: inventory.Dir,
 	}
 
+	hostRunSummary := &HostRunSummaries{}
 	for _, play := range playbook.Plays {
-		logging.Display("PLAY [%s]", play.HostSelector)
+		logging.Header("PLAY [%s]", play.HostSelector)
 		hosts, err := inventory.GetHosts(play.HostSelector)
 		if err != nil {
 			return err
@@ -194,15 +136,15 @@ func(p *ParalelExecutor) Execute(playbook *ansible.Playbook, inventory *ansible.
 					host.Vars[k] = v
 				}
 			}
+			(*hostRunSummary)[host.Name] = &HostRunSummary{}
 		}
-
 		for _, task := range play.Tasks {
 			if task.Name == "" {
 				task.Name = task.ModuleName
 			}
-			logging.Display("TASK [%s]", task.Name)
+			logging.Header("TASK [%s]", task.Name)
 
-			errors := make(chan error, len(hosts))
+			results := make(chan *TaskResultWrap, len(hosts))
 			var wg sync.WaitGroup
 			for _, host := range hosts {
 				// Handle conditional task execution 'when'
@@ -219,24 +161,21 @@ func(p *ParalelExecutor) Execute(playbook *ansible.Playbook, inventory *ansible.
 				if host.Transport == nil {
 					host.Transport = transport.CreateSSHTransport(host.Params)
 				}
-				wg.Add(1)
-				go func(host *ansible.Host) {
-					defer wg.Done()
-					r := task.Module.Run(context, host.Transport, host.Vars)
-					logging.Debug("Module exec: %s", r)
 
-					if r.Result {
-						logging.Info("ok: [%s]", host.Name)
-					} else {
-						logging.Info("failed: [%s]", host.Name)
-						errors <- fmt.Errorf("module execution failed: %s", r.String())
-					}
+				wg.Add(1)
+				(*hostRunSummary)[host.Name].Executed += 1
+				go func(host *Host) {
+					defer wg.Done()
+					// TODO: here we are passing a copy of host variables yet set_fact seems to work so i am confused.
+					//   ideally modules should not have ability to modify host variables directly.
+					moduleResult := task.Module.Run(context, &modules.Host{Transport: host.Transport, Vars: host.Vars})
+
+					logging.Debug("Module exec: %s", moduleResult)
 					// register module output as variable
 					if task.Register != "" {
-						// TODO: module execusion result should probably be wrapped to add extra information such as
-						// execution time, module name...
-						host.Vars[task.Register] = r
+						host.Vars[task.Register] = moduleResult
 					}
+					results <- &TaskResultWrap{ModuleExecResult: moduleResult, Host: host}
 				}(host)
 			}
 
@@ -246,21 +185,39 @@ func(p *ParalelExecutor) Execute(playbook *ansible.Playbook, inventory *ansible.
 				wg.Wait()
 			}()
 
-			select {
-			case <-wgHostsDone:
-				// do nothing
-				logging.Debug("All host finished")
-			case <-time.After(1 * time.Minute):
-				return fmt.Errorf("timed out waiting for ansible-inventory runs")
-			}
+		loop:
+			for {
+				select {
+				case result := <-results:
+					if result.Result {
+						logging.Info("ok: [%s]", result.Host.Name)
+					} else {
+						(*hostRunSummary)[result.Host.Name].Failed += 1
+						logging.Info("failed: [%s] %s", result.Host.Name, result.String())
+					}
+				case <-wgHostsDone:
+					// do nothing
+					logging.Debug("All host finished")
+					break loop
 
-			close(errors)
-			for err := range errors {
-				if err != nil {
-					logging.Error("%s", err)
+				case <-time.After(1 * time.Minute): //TODO: this should be configurable option
+					logging.Error("timed out waiting for ansible-inventory runs")
+					break loop
 				}
+			}
+			if hostRunSummary.hasFails() {
+				break
 			}
 		}
 	}
+
+	logging.Header("PLAY RECAP")
+	for hostName, summary := range *hostRunSummary {
+		logging.Info(fmt.Sprintf("%-12s : ok=%d failed=%d", hostName, summary.Executed-summary.Failed, summary.Failed))
+	}
+	if hostRunSummary.hasFails() {
+		return fmt.Errorf("there were failures")
+	}
+
 	return nil
 }

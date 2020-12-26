@@ -1,4 +1,4 @@
-package ansible
+package pkg
 
 import (
 	"bytes"
@@ -9,7 +9,7 @@ import (
 
 type Playbook struct {
 	Plays []Play
-	Dir string
+	Dir   string
 }
 
 // ReadPlaybook loads playbook yml file into struct
@@ -18,7 +18,7 @@ func ReadPlaybook(in io.Reader, playbook *Playbook) error {
 	bytesRead, err := buf.ReadFrom(in)
 	if bytesRead < 1 {
 		return fmt.Errorf("empty file")
-	} else if err != nil  {
+	} else if err != nil {
 		return fmt.Errorf("error reading file: %v", err)
 	}
 	// Playbook is essentially a slice of unnamed

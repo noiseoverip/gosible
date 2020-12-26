@@ -2,7 +2,6 @@ package modules
 
 import (
 	"ansiblego/pkg/logging"
-	"ansiblego/pkg/transport"
 	"gopkg.in/yaml.v2"
 )
 
@@ -15,9 +14,9 @@ func LoadDebug(args map[string]interface{}) Module {
 	return &Debug{Var: args["var"].(string)}
 }
 
-func (d *Debug) Run(_ Context, _ transport.Transport, vars map[string]interface{}) *ModuleExecResult {
+func (d *Debug) Run(_ Context, host *Host) *ModuleExecResult {
 	value := "NULL"
-	if v, ok := vars[d.Var]; ok {
+	if v, ok := host.Vars[d.Var]; ok {
 		b, err := yaml.Marshal(v)
 		if err != nil {
 			logging.Debug("ERROR: %v", err)

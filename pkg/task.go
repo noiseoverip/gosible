@@ -1,4 +1,4 @@
-package ansible
+package pkg
 
 import (
 	"ansiblego/pkg/modules"
@@ -7,11 +7,11 @@ import (
 )
 
 type Task struct {
-	Name     string `yaml:"name"`
+	Name       string `yaml:"name"`
 	ModuleName string
-	Module   modules.Module
-	When     string		// raw 'when' attribute which controls if task will be executed or not
-	Register string	// variable name to register tasks result to
+	Module     modules.Module
+	When       string // raw 'when' attribute which controls if task will be executed or not
+	Register   string // variable name to register tasks result to
 }
 
 func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -37,11 +37,11 @@ func (t *Task) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			t.Module = modules.LoadDebug(params)
 		case "command":
 			t.ModuleName = "command"
-			t.Module = modules.LoadCommand(map[string]string{ "stdin": value.(string) })
+			t.Module = modules.LoadCommand(map[string]string{"stdin": value.(string)})
 		case "template":
 			t.ModuleName = "template"
 			params := map[string]string{}
-			err := mapstructure.Decode(value, &params)	// TODO: this might be slow, need to investigate
+			err := mapstructure.Decode(value, &params) // TODO: this might be slow, need to investigate
 			if err != nil {
 				return err
 			}

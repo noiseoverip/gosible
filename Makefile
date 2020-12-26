@@ -1,17 +1,23 @@
 build:
-	echo "Building"
-
-build:
 	go build
 
+.PHONY: test
 test:
 	go test ./...
 
-test-integration:
+.PHONY: testint
+testint:
 	go test --count 1 --tags integration ./testing/integration/...
 
-test-benchmark:
+.PHONY: bench
+bench:
 	# Run ansiblego benchmark test
 	go run main.go benchmark
 
-test-all: test test-integration test-benchmark
+
+.PHONY: format
+format: vendor
+	gofmt -s -w .
+	golangci-lint run --fix
+
+test-all: test testint bench

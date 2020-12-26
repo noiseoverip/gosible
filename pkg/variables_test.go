@@ -1,4 +1,4 @@
-package ansible
+package pkg
 
 //func TestLoadGroupVars(t *testing.T) {
 //	vars, err := load_group_vars("./testfiles")

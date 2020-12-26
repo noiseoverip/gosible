@@ -48,9 +48,9 @@ func main() {
 
 	switch os.Args[1] {
 	case "playbook":
-		playbookCommand.Parse(os.Args[2:])
+		_ = playbookCommand.Parse(os.Args[2:])
 	case "benchmark":
-		benchmarkCommand.Parse(os.Args[2:])
+		_ = benchmarkCommand.Parse(os.Args[2:])
 	case "help":
 		fallthrough
 	case "--help":

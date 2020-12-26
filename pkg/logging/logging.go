@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// TODO: get rid of global logger
 var Global = NewGosibleDefaultLogger()
 
 type GosibleLogger struct {
@@ -23,14 +24,14 @@ type GosibleLogger struct {
 }
 
 func Info(format string, v ...interface{}) {
-	Global.InfoLogger.Output(2, fmt.Sprintf(format, v...))
+	_ = Global.InfoLogger.Output(2, fmt.Sprintf(format, v...))
 }
 
 func Error(format string, v ...interface{}) {
-	Global.InfoLogger.Output(2, "ERROR: "+fmt.Sprintf(format, v...))
+	_ = Global.InfoLogger.Output(2, "ERROR: "+fmt.Sprintf(format, v...))
 }
 
-func Display(format string, v ...interface{}) {
+func Header(format string, v ...interface{}) {
 	width, _, _ := terminal.GetSize(int(os.Stdout.Fd()))
 	if width < 1 {
 		width = 130
@@ -40,7 +41,7 @@ func Display(format string, v ...interface{}) {
 }
 
 func Debug(format string, v ...interface{}) {
-	Global.VerboseLogger.Output(2, fmt.Sprintf(format, v...))
+	_ = Global.VerboseLogger.Output(2, fmt.Sprintf(format, v...))
 }
 
 func (g *GosibleLogger) SetLevel(level int) {
@@ -53,12 +54,12 @@ func (g *GosibleLogger) Info(msg interface{}) {
 
 func (g *GosibleLogger) Verbose(format string, v ...interface{}) {
 	if g.Level > 0 {
-		g.VerboseLogger.Output(2, fmt.Sprintf(format, v...))
+		_ = g.VerboseLogger.Output(2, fmt.Sprintf(format, v...))
 	}
 }
 
 func (g *GosibleLogger) Warn(format string, v ...interface{}) {
-	g.WarningLogger.Output(2, fmt.Sprintf(format, v...))
+	_ = g.WarningLogger.Output(2, fmt.Sprintf(format, v...))
 }
 
 func NewGosibleLogger(

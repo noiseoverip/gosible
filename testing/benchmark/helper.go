@@ -39,7 +39,7 @@ func RunGosible(config *BenchmarkConfig) error {
 			InventoryFilePath: path.Join(resourcePath(), "hosts"),
 			PlaybookFilePath:  path.Join(resourcePath(), config.PlaybookName),
 		},
-		Strategy: &pkg.SequentialExecuter{},
+		Strategy: &pkg.ParalelExecutor{},
 	}
 	start := time.Now().Unix()
 	err := r.Run()

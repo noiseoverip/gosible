@@ -1,4 +1,4 @@
-// +build integration
+// build integration
 
 package integration
 
@@ -10,9 +10,14 @@ import (
 	"testing"
 )
 
+// TODO: run tests inside docker container. It might be easier to build container with out hardcoded ssh key in it,
+//   quickly start and quickly kill it and run all these tests in parallel.
+//
+
 func TestBasicPlaybook(t *testing.T) {
 	setup(t)
 	wd, _ := os.Getwd()
+	//logging.Global = logging.NewGosibleVerboseLogger(5)
 	r := pkg.NewRunner(path.Join(wd, "hosts"), path.Join(wd, "site.yaml"))
 	err := r.Run()
 	assert.NoError(t, err)

@@ -1,5 +1,4 @@
-package ansible
+package pkg
 
 type Role struct {
-
 }

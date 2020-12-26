@@ -1,6 +1,6 @@
 module ansiblego
 
-go 1.12
+go 1.15
 
 require (
 	github.com/bramvdbogaerde/go-scp v0.0.0-20200119201711-987556b8bdd7

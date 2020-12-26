@@ -1,4 +1,4 @@
-package ansible
+package pkg
 
 import (
 	"ansiblego/pkg/logging"
@@ -17,7 +17,7 @@ type GroupVariables map[string]map[string]interface{}
 type HostVariables map[string]interface{}
 
 func (hv HostVariables) Add(newVars map[string]interface{}) {
-	for k,v := range newVars {
+	for k, v := range newVars {
 		hv[k] = v
 	}
 }
@@ -25,7 +25,7 @@ func (hv HostVariables) Add(newVars map[string]interface{}) {
 // load groups variables from provided groupByName vars directory structs
 // for now only supports directory based groupByName vars
 func LoadGroupVars(dir string) (groupVars GroupVariables, err error) {
-	groupVars = make(map[string]map[string]interface{}, 0)
+	groupVars = make(map[string]map[string]interface{})
 	root := filepath.Join(dir, "group_vars")
 	// Exist if doesn't exist
 	if _, err := os.Stat(root); os.IsNotExist(err) {
@@ -55,10 +55,10 @@ func LoadGroupVars(dir string) (groupVars GroupVariables, err error) {
 			}
 
 			if _, ok := groupVars[group]; !ok {
-				groupVars[group] = make(map[string]interface{}, 0)
+				groupVars[group] = make(map[string]interface{})
 			}
 
-			for k,v := range variables {
+			for k, v := range variables {
 				groupVars[group][k] = v
 			}
 

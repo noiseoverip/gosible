@@ -1,9 +1,8 @@
-package ansible
+package pkg
 
 import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
-	"io"
 	"testing"
 )
 
@@ -26,8 +25,7 @@ host2
 `)
 
 func TestReadParams(t *testing.T) {
-	var r io.Reader
-	r = bytes.NewReader(inventoryExample)
+	r := bytes.NewReader(inventoryExample)
 
 	inv := new(Inventory)
 	err := ReadInventory(r, inv)
@@ -41,8 +39,7 @@ func TestReadParams(t *testing.T) {
 }
 
 func TestReadInventory(t *testing.T) {
-	var r io.Reader
-	r = bytes.NewReader(inventoryExample)
+	r := bytes.NewReader(inventoryExample)
 
 	inv := new(Inventory)
 	err := ReadInventory(r, inv)

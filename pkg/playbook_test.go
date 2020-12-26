@@ -1,9 +1,8 @@
-package ansible
+package pkg
 
 import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
-	"io"
 	"testing"
 )
 
@@ -28,8 +27,7 @@ var hostsExample = []byte(`
 
 func TestLoadPlaybook(t *testing.T) {
 
-	var r io.Reader
-	r = bytes.NewReader(hostsExample)
+	r := bytes.NewReader(hostsExample)
 
 	playbook := new(Playbook)
 	err := ReadPlaybook(r, playbook)

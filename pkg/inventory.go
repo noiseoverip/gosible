@@ -1,4 +1,4 @@
-package ansible
+package pkg
 
 import (
 	"bufio"
@@ -17,8 +17,8 @@ type Inventory struct {
 	Dir string
 }
 
-// Here we should interpret host selector and build a list of hosts we should run tasks play on
-// but for now we limit our selves to only supporting running on groups
+// TODO: Here we should interpret host selector and build a list of hosts we should run tasks play on but for now we
+//   limit our selves to only supporting running on groups
 func (i *Inventory) GetHosts(selector string) ([]*Host, error) {
 	if group, found := i.groupByName(selector); found {
 		return group.Hosts, nil
@@ -26,7 +26,7 @@ func (i *Inventory) GetHosts(selector string) ([]*Host, error) {
 	return nil, fmt.Errorf("currently only support groups as host selector and groupByName %s was not found", selector)
 }
 
-func (i *Inventory) groupByName(name string) (group *HostGroup, ok bool ){
+func (i *Inventory) groupByName(name string) (group *HostGroup, ok bool) {
 	for _, g := range i.Groups {
 		if g.Name == name {
 			return g, true
@@ -44,7 +44,7 @@ func ReadInventory(in io.Reader, inventory *Inventory) error {
 	for sc.Scan() {
 		line := sc.Text()
 		if strings.HasPrefix(line, "[") {
-			groupName := strings.TrimSpace(line[1:len(line)-1])
+			groupName := strings.TrimSpace(line[1 : len(line)-1])
 			if gtemp, ok := inventory.groupByName(groupName); ok {
 				// Found existing groupByName
 				currentGroup = gtemp
@@ -63,7 +63,7 @@ func ReadInventory(in io.Reader, inventory *Inventory) error {
 			if existingHost, found := findHost(host.Name, inventory.Hosts); found {
 				// Existing host means we already took care of group all
 				host = existingHost
-			} else if currentGroup.Name != "all"{
+			} else if currentGroup.Name != "all" {
 				// In case this is first time we are seeing the host and we are already in context of some other group
 				host.Groups = append(host.Groups, "all")
 				groupAll.Hosts = append(groupAll.Hosts, host)
