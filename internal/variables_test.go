@@ -1,4 +1,4 @@
-package pkg
+package internal
 
 //func TestLoadGroupVars(t *testing.T) {
 //	vars, err := load_group_vars("./testfiles")

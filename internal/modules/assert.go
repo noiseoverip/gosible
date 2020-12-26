@@ -1,7 +1,7 @@
 package modules
 
 import (
-	"ansiblego/pkg/templating"
+	"ansiblego/internal/templating"
 )
 
 type Assert struct {

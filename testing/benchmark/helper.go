@@ -1,8 +1,8 @@
 package benchmark
 
 import (
-	"ansiblego/pkg"
-	"ansiblego/pkg/logging"
+	"ansiblego/internal"
+	"ansiblego/internal/logging"
 	"fmt"
 	"log"
 	"os"
@@ -34,12 +34,12 @@ func RunGosible(config *BenchmarkConfig) error {
 		logging.Global.SetVerbose(os.Stdout)
 	}
 
-	r := pkg.Runner{
-		Context: &pkg.Context{
+	r := internal.Runner{
+		Context: &internal.Context{
 			InventoryFilePath: path.Join(resourcePath(), "hosts"),
 			PlaybookFilePath:  path.Join(resourcePath(), config.PlaybookName),
 		},
-		Strategy: &pkg.ParalelExecutor{},
+		Strategy: &internal.ParalelExecutor{},
 	}
 	start := time.Now().Unix()
 	err := r.Run()

@@ -3,7 +3,7 @@
 package integration
 
 import (
-	"ansiblego/pkg"
+	"ansiblego/internal"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"path"
@@ -18,7 +18,7 @@ func TestBasicPlaybook(t *testing.T) {
 	setup(t)
 	wd, _ := os.Getwd()
 	//logging.Global = logging.NewGosibleVerboseLogger(5)
-	r := pkg.NewRunner(path.Join(wd, "hosts"), path.Join(wd, "site.yaml"))
+	r := internal.NewRunner(path.Join(wd, "hosts"), path.Join(wd, "site.yaml"))
 	err := r.Run()
 	assert.NoError(t, err)
 }

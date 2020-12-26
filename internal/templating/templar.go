@@ -1,7 +1,7 @@
 package templating
 
 import (
-	"ansiblego/pkg/logging"
+	"ansiblego/internal/logging"
 	"fmt"
 	"github.com/flosch/pongo2"
 	"strings"

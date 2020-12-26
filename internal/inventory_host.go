@@ -1,7 +1,7 @@
-package pkg
+package internal
 
 import (
-	"ansiblego/pkg/transport"
+	"ansiblego/internal/transport"
 	"strings"
 )
 

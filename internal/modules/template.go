@@ -1,8 +1,8 @@
 package modules
 
 import (
-	"ansiblego/pkg/logging"
-	"ansiblego/pkg/templating"
+	"ansiblego/internal/logging"
+	"ansiblego/internal/templating"
 	"bytes"
 	"io/ioutil"
 	"os"

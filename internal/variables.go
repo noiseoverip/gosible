@@ -1,7 +1,7 @@
-package pkg
+package internal
 
 import (
-	"ansiblego/pkg/logging"
+	"ansiblego/internal/logging"
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"

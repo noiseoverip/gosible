@@ -1,7 +1,7 @@
-package pkg
+package internal
 
 import (
-	"ansiblego/pkg/modules"
+	"ansiblego/internal/modules"
 	"fmt"
 	"github.com/mitchellh/mapstructure"
 )

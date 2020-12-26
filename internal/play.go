@@ -1,4 +1,4 @@
-package pkg
+package internal
 
 type Play struct {
 	HostSelector string   `yaml:"hosts"`

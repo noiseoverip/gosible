@@ -1,7 +1,7 @@
 package modules
 
 import (
-	"ansiblego/pkg/transport"
+	"ansiblego/internal/transport"
 	"fmt"
 )
 

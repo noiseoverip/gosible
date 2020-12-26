@@ -1,10 +1,10 @@
-package pkg
+package internal
 
 import (
-	"ansiblego/pkg/logging"
-	"ansiblego/pkg/modules"
-	"ansiblego/pkg/templating"
-	"ansiblego/pkg/transport"
+	"ansiblego/internal/logging"
+	"ansiblego/internal/modules"
+	"ansiblego/internal/templating"
+	"ansiblego/internal/transport"
 	"fmt"
 	"os"
 	"path"
