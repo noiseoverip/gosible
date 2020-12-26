@@ -11,6 +11,7 @@ import (
 	"net"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -19,17 +20,26 @@ import (
 type SSHTransport struct {
 	HostAddress string
 	Login       string
+	Port        int
 	SSHClient   *ssh.Client
 	SCPClient   *scp.Client
 	KeyPath     string
 }
 
-func CreateSSHTransport(params map[string]string) Transport {
+// CreateSSHTransport creates ssh transport from provided hot params. Keep this as flexible as possible for now where
+// we simply pass all host variables to here so we can use whatever is needed directly.
+func CreateSSHTransport(params map[string]string) (Transport, error) {
+	portString := params["ansible_port"]
+	port, err := strconv.Atoi(portString)
+	if err != nil {
+		return nil, fmt.Errorf("ansible_port must be integer but got: %s", portString)
+	}
 	return &SSHTransport{
 		HostAddress: params["ansible_host"],
 		Login:       params["ansible_user"],
+		Port:        port,
 		KeyPath:     params["ansible_ssh_private_key"],
-	}
+	}, nil
 }
 
 // Exec executes command
@@ -72,7 +82,7 @@ func (t *SSHTransport) scpClient(loginName string, hostIpAddress string, private
 func (t *SSHTransport) SendFileToRemote(srcFilePath string, destFilePath string, mode string) (err error) {
 	// TODO: re-use scp sessions.
 	if t.SCPClient == nil {
-		t.SCPClient, err = t.scpClient(t.Login, fmt.Sprintf("%s:22", t.HostAddress), t.KeyPath)
+		t.SCPClient, err = t.scpClient(t.Login, fmt.Sprintf("%s:%d", t.HostAddress, t.Port), t.KeyPath)
 		if err != nil {
 			return fmt.Errorf("failed to create session :%v ", err)
 		}
@@ -125,7 +135,7 @@ func (t *SSHTransport) sshClient() (*ssh.Client, error) {
 		},
 		Timeout: time.Second * 5,
 	}
-	nodeAddr := fmt.Sprintf("%s:22", t.HostAddress)
+	nodeAddr := fmt.Sprintf("%s:%d", t.HostAddress, t.Port)
 
 	logging.Debug("Opening SSH connection to %s@%s", t.Login, nodeAddr)
 	return ssh.Dial("tcp", nodeAddr, sshConfig)

@@ -159,7 +159,10 @@ func (p *ParalelExecutor) Execute(playbook *Playbook, inventory *Inventory, vars
 					}
 				}
 				if host.Transport == nil {
-					host.Transport = transport.CreateSSHTransport(host.Params)
+					host.Transport, err = transport.CreateSSHTransport(host.Params)
+					if err != nil {
+						return fmt.Errorf("failed to create transport for host %s: %s", host.Name, err.Error())
+					}
 				}
 
 				wg.Add(1)
