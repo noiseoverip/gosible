@@ -11,9 +11,8 @@ testint:
 
 .PHONY: bench
 bench:
-	# Run ansiblego benchmark test
-	go run main.go benchmark
-
+	# Run few different playbooks with gosible and ansible for comparison
+	go run cmd/gosible-bench/main.go --host ${HOST}
 
 .PHONY: format
 format: vendor

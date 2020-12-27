@@ -22,6 +22,7 @@ type BenchmarkConfig struct {
 	PlaybookName           string
 	ExpectedMaxDurationSec int64
 	Verbose                int
+	TargetHostAddr         string
 }
 
 func RunGosible(config *BenchmarkConfig) error {
