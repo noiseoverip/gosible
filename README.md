@@ -1,4 +1,4 @@
-# A naive attempt to rewrite Ansible in go
+# Gosbile - a naive attempt to rewrite Ansible in go
 As title says, this is a very naive attempt to rewrite Ansible in go. 
 
 Why ?
@@ -17,3 +17,14 @@ This is a list of Ansible features that are implemented in gosible.
 * Module "set_fact" : register given value as variable
 * Module "debug"
 * Module "copy" - copy files to target hosts
+
+# Building
+`make build` should be enough
+
+# Testing
+`make test` - runs unit tests which do not have any external dependencies
+
+`make testint` - run integration tests which require some host to exist. Define env var HOST with IP address of a linux 
+VM when running these tests and make sure your user can SSH to that VM with default ssh keys.
+
+`make bench` - run few different playbooks with Gosible and Ansible and compare times. Needs Ansible and linux VM (env var HOST)

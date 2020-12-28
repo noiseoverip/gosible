@@ -4,6 +4,7 @@ package integration
 
 import (
 	"ansiblego/internal"
+	"ansiblego/testing/tools"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"path"
@@ -24,7 +25,12 @@ func TestBasicPlaybook(t *testing.T) {
 }
 
 func setup(t *testing.T) {
-	err := os.Chdir("files")
+	wd, _ := os.Getwd()
+	hostsFile := path.Join(wd, "files/hosts")
+	err := tools.RenderHostsFile(path.Join(wd, "files/hosts_template"), hostsFile, os.Getenv("HOST"))
+	assert.NoError(t, err)
+
+	err = os.Chdir("files")
 	assert.Nil(t, err)
 	dir, err := os.Getwd()
 	assert.Nil(t, err)

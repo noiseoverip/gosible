@@ -1,13 +1,13 @@
 build:
-	go build
+	go build cmd/gosible/main.go
 
 .PHONY: test
 test:
-	go test ./...
+	go test ./internal/...
 
 .PHONY: testint
 testint:
-	go test --count 1 --tags integration ./testing/integration/...
+	HOST=${HOST} go test --count 1 --tags integration ./testing/integration/...
 
 .PHONY: bench
 bench:

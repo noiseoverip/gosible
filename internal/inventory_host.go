@@ -2,6 +2,7 @@ package internal
 
 import (
 	"ansiblego/internal/transport"
+	"fmt"
 	"strings"
 )
 
@@ -29,9 +30,12 @@ func UnmarshalHost(input string, h *Host) (err error) {
 	// For now assume that first element is always an alias, so we force to use aliases !
 	h.Name = els[0]
 	for _, el := range els[1:] {
+		el = strings.TrimSpace(el)
 		// Put all key-value pairs into a map so we can have any attributes attached and pass them to transport...
 		keyVal := strings.Split(el, "=")
-
+		if len(keyVal) != 2 {
+			return fmt.Errorf("host params should be specified as key=value, got: %s", el)
+		}
 		h.Params[keyVal[0]] = keyVal[1]
 
 		// Parse default keys-value pairs

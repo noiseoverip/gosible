@@ -2,9 +2,9 @@ package main
 
 import (
 	"ansiblego/testing/benchmark"
+	"ansiblego/testing/tools"
 	"flag"
 	"fmt"
-	"html/template"
 	"log"
 	"os"
 )
@@ -33,18 +33,10 @@ func runBenchmark() error {
 		{PlaybookName: "test_templates_10.yaml", ExpectedMaxDurationSec: 40, Verbose: verbosity, TargetHostAddr: targetHost},
 	}
 
-	hostsFileTemplate, err := template.New("hosts_template").ParseFiles("testing/benchmark/files/hosts_template")
+	hostsFile := "testing/benchmark/files/hosts"
+	err := tools.RenderHostsFile("testing/benchmark/files/hosts_template", hostsFile, targetHost)
 	panicIfError(err)
-
-	f, err := os.Create("testing/benchmark/files/hosts")
-	panicIfError(err)
-
-	err = hostsFileTemplate.Execute(f, map[string]string{"targetHost": targetHost})
-	panicIfError(err)
-	defer os.RemoveAll(f.Name())
-
-	err = f.Close()
-	panicIfError(err)
+	defer os.RemoveAll(hostsFile)
 
 	for _, tool := range []func(c *benchmark.BenchmarkConfig) error{
 		benchmark.RunGosible,
