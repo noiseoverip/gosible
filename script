@@ -1,0 +1,17 @@
+package main
+
+import "fmt"
+//import "Foo"
+//import "github.com/traefik/yaegi/interp/Options"
+//import "ansiblego/internal"
+import "ansiblego/internal"
+
+func gosible(params string) string {
+    fmt.Printf("Running with params %s", params)
+    //i := internal.Play{}
+    fmt.Printf("%s", internal.foo())
+    ff := internal.Foo2
+    fmt.Printf("%v", ff.Bar())
+    return "i was run"
+}
+
